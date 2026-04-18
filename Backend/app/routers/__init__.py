@@ -1,2 +1,0 @@
-# Các API endpoint.
-# BE
