@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     app_name: str
     app_version: str 
     database_url: str 
-    debug: bool 
+    app_debug: bool 
 
     model_config = SettingsConfigDict(
         env_file=".env",

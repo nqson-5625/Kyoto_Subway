@@ -9,7 +9,7 @@ setup_logging()
 app = FastAPI(
     title=settings.app_name, 
     version=settings.app_version,
-    debug=settings.debug,
+    debug=settings.app_debug,
     lifespan=lifespan
 )
 
