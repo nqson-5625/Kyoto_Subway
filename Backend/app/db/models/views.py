@@ -7,6 +7,7 @@ from sqlalchemy import Boolean, Date, DateTime, Integer, SmallInteger, BigIntege
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+from app.db.enums import RoutingEdgeType, DirectionId, ServiceType, PredictionStatus, PredictionSource
 
 
 class ServiceDatesBaseView(Base):
@@ -33,8 +34,8 @@ class ActiveTripStopTimesView(Base):
     line_code: Mapped[Optional[str]] = mapped_column(Text)
     service_id: Mapped[str] = mapped_column(Text, nullable=False)
     service_name: Mapped[str] = mapped_column(Text, nullable=False)
-    service_type: Mapped[str] = mapped_column(Text, nullable=False)
-    direction_id: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    service_type: Mapped[ServiceType] = mapped_column(Text, nullable=False)
+    direction_id: Mapped[DirectionId] = mapped_column(SmallInteger, nullable=False)
     direction_name: Mapped[Optional[str]] = mapped_column(Text)
     origin_station_id: Mapped[Optional[str]] = mapped_column(Text)
     origin_station_name: Mapped[Optional[str]] = mapped_column(Text)
@@ -67,8 +68,8 @@ class ActiveTripSegmentsView(Base):
     line_code: Mapped[Optional[str]] = mapped_column(Text)
     service_id: Mapped[str] = mapped_column(Text, nullable=False)
     service_name: Mapped[str] = mapped_column(Text, nullable=False)
-    service_type: Mapped[str] = mapped_column(Text, nullable=False)
-    direction_id: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    service_type: Mapped[ServiceType] = mapped_column(Text, nullable=False)
+    direction_id: Mapped[DirectionId] = mapped_column(SmallInteger, nullable=False)
     direction_name: Mapped[Optional[str]] = mapped_column(Text)
     headsign: Mapped[str] = mapped_column(Text, nullable=False)
     from_timetable_id: Mapped[int] = mapped_column(primary_key=True)
@@ -90,11 +91,11 @@ class RoutingEdgesActiveView(Base):
     __tablename__ = "v_routing_edges_active"
 
     service_date: Mapped[date] = mapped_column(Date)
-    edge_type: Mapped[str] = mapped_column(Text)
+    edge_type: Mapped[RoutingEdgeType] = mapped_column(Text)
 
     trip_id: Mapped[Optional[str]] = mapped_column(Text)
     line_id: Mapped[Optional[str]] = mapped_column(Text)
-    direction_id: Mapped[Optional[int]] = mapped_column(SmallInteger)
+    direction_id: Mapped[Optional[DirectionId]] = mapped_column(SmallInteger)
     direction_name: Mapped[Optional[str]] = mapped_column(Text)
     headsign: Mapped[Optional[str]] = mapped_column(Text)
 
@@ -153,8 +154,8 @@ class LatestPredictedStopTimesView(Base):
     predicted_arrival_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     predicted_departure_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     delay_min: Mapped[int] = mapped_column(Integer, nullable=False)
-    status: Mapped[str] = mapped_column(Text, nullable=False)
-    prediction_source: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[PredictionStatus] = mapped_column(Text, nullable=False)
+    prediction_source: Mapped[PredictionSource] = mapped_column(Text, nullable=False)
 
 
 class StationDepartureBoardView(Base):
@@ -170,7 +171,7 @@ class StationDepartureBoardView(Base):
     line_name: Mapped[str] = mapped_column(Text, nullable=False)
     line_code: Mapped[Optional[str]] = mapped_column(Text)
     trip_id: Mapped[str] = mapped_column(Text, nullable=False)
-    direction_id: Mapped[Optional[int]] = mapped_column(SmallInteger)
+    direction_id: Mapped[Optional[DirectionId]] = mapped_column(SmallInteger)
     direction_label: Mapped[str] = mapped_column(Text, nullable=False)
     line_station_order: Mapped[int] = mapped_column(Integer, nullable=False)
     stop_sequence: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -179,4 +180,4 @@ class StationDepartureBoardView(Base):
     predicted_departure_day_offset: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     predicted_departure_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     delay_min: Mapped[int] = mapped_column(Integer, nullable=False)
-    status: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[PredictionStatus] = mapped_column(Text, nullable=False)

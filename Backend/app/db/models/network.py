@@ -9,6 +9,7 @@ from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, ForeignKeyCons
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 
 from app.db.base import Base
+from app.db.enums import TransferType
 
 
 class Line(Base):
@@ -207,7 +208,7 @@ class Transfer(Base):
     to_station_id: Mapped[str] = mapped_column(ForeignKey("stations.station_id", onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     transfer_time_min: Mapped[int] = mapped_column(Integer, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("TRUE"))
-    transfer_type: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'same_station_interchange'"))
+    transfer_type: Mapped[TransferType] = mapped_column(Text, nullable=False, server_default=text("'same_station_interchange'"))
     note: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))

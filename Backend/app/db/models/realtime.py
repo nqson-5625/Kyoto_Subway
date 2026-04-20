@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.db.enums import PredictionStatus, PredictionSource, RouteRequestResultStatus, DirectionId
 
 
 class PredictedStopTime(Base):
@@ -43,8 +44,8 @@ class PredictedStopTime(Base):
     predicted_arrival_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     predicted_departure_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     delay_min: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
-    status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'on_time'"))
-    prediction_source: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'simulation_engine'"))
+    status: Mapped[PredictionStatus] = mapped_column(Text, nullable=False, server_default=text("'on_time'"))
+    prediction_source: Mapped[PredictionSource] = mapped_column(Text, nullable=False, server_default=text("'simulation_engine'"))
     scenario_id: Mapped[Optional[str]] = mapped_column(ForeignKey("scenarios.scenario_id", onupdate="CASCADE", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
@@ -72,7 +73,7 @@ class NextDeparture(Base):
     service_date: Mapped[date] = mapped_column(Date, nullable=False)
     station_id: Mapped[str] = mapped_column(ForeignKey("stations.station_id", onupdate="CASCADE", ondelete="RESTRICT"), nullable=False)
     line_id: Mapped[str] = mapped_column(ForeignKey("lines.line_id", onupdate="CASCADE", ondelete="RESTRICT"), nullable=False)
-    direction_id: Mapped[Optional[int]] = mapped_column(SmallInteger)
+    direction_id: Mapped[Optional[DirectionId]] = mapped_column(SmallInteger)
     direction_label: Mapped[str] = mapped_column(Text, nullable=False)
     trip_id: Mapped[str] = mapped_column(Text, nullable=False)
     timetable_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
@@ -83,7 +84,7 @@ class NextDeparture(Base):
     predicted_departure_day_offset: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default=text("0"))
     predicted_departure_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     delay_min: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
-    status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'on_time'"))
+    status: Mapped[PredictionStatus] = mapped_column(Text, nullable=False, server_default=text("'on_time'"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
     station: Mapped["Station"] = relationship(back_populates="next_departures")
@@ -103,7 +104,7 @@ class RouteRequestLog(Base):
     scenario_id: Mapped[Optional[str]] = mapped_column(ForeignKey("scenarios.scenario_id", onupdate="CASCADE", ondelete="SET NULL"))
     algorithm_version: Mapped[str] = mapped_column(Text, nullable=False)
     execution_ms: Mapped[Optional[int]] = mapped_column(Integer)
-    result_status: Mapped[str] = mapped_column(Text, nullable=False)
+    result_status: Mapped[RouteRequestResultStatus] = mapped_column(Text, nullable=False)
     result_payload: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB)
 
     origin_station: Mapped["Station"] = relationship(back_populates="route_requests_origin", foreign_keys=[origin_station_id])

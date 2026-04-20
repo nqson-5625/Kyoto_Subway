@@ -7,6 +7,7 @@ from sqlalchemy import BigInteger, Boolean, Date, DateTime, ForeignKey, ForeignK
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 
 from app.db.base import Base
+from app.db.enums import ServiceType, ServiceExceptionType, ServiceExceptionCategory, DirectionId
 
 
 class ServiceCalendar(Base):
@@ -14,7 +15,7 @@ class ServiceCalendar(Base):
 
     service_id: Mapped[str] = mapped_column(Text, primary_key=True)
     service_name: Mapped[str] = mapped_column(Text, nullable=False)
-    service_type: Mapped[str] = mapped_column(Text, nullable=False)
+    service_type: Mapped[ServiceType] = mapped_column(Text, nullable=False)
     monday: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("FALSE"))
     tuesday: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("FALSE"))
     wednesday: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("FALSE"))
@@ -49,8 +50,8 @@ class ServiceException(Base):
     service_exception_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     service_id: Mapped[str] = mapped_column(ForeignKey("service_calendar.service_id", onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     service_date: Mapped[date] = mapped_column(Date, nullable=False)
-    exception_type: Mapped[str] = mapped_column(Text, nullable=False)
-    exception_category: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'special_operation'"))
+    exception_type: Mapped[ServiceExceptionType] = mapped_column(Text, nullable=False)
+    exception_category: Mapped[ServiceExceptionCategory] = mapped_column(Text, nullable=False, server_default=text("'special_operation'"))
     reason: Mapped[Optional[str]] = mapped_column(Text)
     note: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
@@ -70,7 +71,7 @@ class Trip(Base):
     trip_id: Mapped[str] = mapped_column(Text, primary_key=True)
     line_id: Mapped[str] = mapped_column(ForeignKey("lines.line_id", onupdate="CASCADE", ondelete="RESTRICT"), nullable=False)
     service_id: Mapped[str] = mapped_column(ForeignKey("service_calendar.service_id", onupdate="CASCADE", ondelete="RESTRICT"), nullable=False)
-    direction_id: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    direction_id: Mapped[DirectionId] = mapped_column(SmallInteger, nullable=False)
     direction_name: Mapped[Optional[str]] = mapped_column(Text)
     origin_station_id: Mapped[Optional[str]] = mapped_column(ForeignKey("stations.station_id", onupdate="CASCADE", ondelete="RESTRICT"))
     destination_station_id: Mapped[Optional[str]] = mapped_column(ForeignKey("stations.station_id", onupdate="CASCADE", ondelete="RESTRICT"))
