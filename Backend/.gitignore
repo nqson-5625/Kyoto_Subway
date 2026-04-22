@@ -12,3 +12,6 @@ wheels/
 
 .env
 *.yml
+
+data/current/
+data/builds/
