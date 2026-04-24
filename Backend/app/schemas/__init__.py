@@ -1,12 +1,12 @@
 from app.schemas.common import MessageResponse
 
-from Backend.app.schemas.network import (
+from app.schemas.network import (
     LineResponse, LineStationResponse,
     StationResponse, 
     TransferResponse
 )
 
-from Backend.app.schemas.status import (
+from app.schemas.status import (
     ScenarioResponse,
     LineStatusEventCreate, LineStatusEventResponse, LineStatusEventUpdate,
     StationStatusEventCreate, StationStatusEventResponse, StationStatusEventUpdate,
@@ -14,7 +14,7 @@ from Backend.app.schemas.status import (
     TripStatusEventCreate, TripStatusEventResponse, TripStatusEventUpdate,
 )
 
-from Backend.app.schemas.schedule import (
+from app.schemas.schedule import (
     ServiceByDateResponse,
     HolidayDateCreate, HolidayDateResponse, HolidayDateUpdate,
     ServiceExceptionCreate, ServiceExceptionResponse, ServiceExceptionUpdate,
