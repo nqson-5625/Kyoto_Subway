@@ -1,0 +1,270 @@
+{
+  "status": "success",
+  "request": {
+    "origin": [
+      135.7589,
+      35.0103
+    ],
+    "destination": [
+      135.7417,
+      35.011
+    ],
+    "scenario_id": "mixed_transfer_congestion",
+    "optimize_for": "time"
+  },
+  "routes": [
+    {
+      "route_id": "route_001",
+      "rank": 1,
+      "entry_station": {
+        "station_id": "K08",
+        "station_name": "Karasuma Oike",
+        "line_id": "karasuma",
+        "line_station_order": 8
+      },
+      "exit_station": {
+        "station_id": "T15",
+        "station_name": "Nijo",
+        "line_id": "tozai",
+        "line_station_order": 15
+      },
+      "origin_walk_target": {
+        "graph_node": {
+          "node_id": 128734,
+          "lon": 135.7591,
+          "lat": 35.0107
+        },
+        "station": {
+          "station_id": "K08",
+          "station_name": "Karasuma Oike",
+          "line_id": "karasuma",
+          "line_station_order": 8
+        }
+      },
+      "destination_walk_source": {
+        "graph_node": {
+          "node_id": 129882,
+          "lon": 135.7419,
+          "lat": 35.0111
+        },
+        "station": {
+          "station_id": "T15",
+          "station_name": "Nijo",
+          "line_id": "tozai",
+          "line_station_order": 15
+        }
+      },
+      "segments": [
+        {
+          "segment_index": 0,
+          "mode": "walk",
+          "from_node_id": 128700,
+          "to_node_id": 128734,
+          "from_station_id": null,
+          "to_station_id": "K08",
+          "line_id": null,
+          "trip_id": null,
+          "direction_id": null,
+          "distance_m": 180.5,
+          "base_travel_minutes": 2.6,
+          "transfer_minutes": null,
+          "edge_ids": [],
+          "transfer_ids": [],
+          "path_node_ids": [
+            128700,
+            128710,
+            128720,
+            128734
+          ],
+          "polyline": {
+            "coordinates": [
+              {
+                "lon": 135.7589,
+                "lat": 35.0103
+              },
+              {
+                "lon": 135.759,
+                "lat": 35.0105
+              },
+              {
+                "lon": 135.7591,
+                "lat": 35.0107
+              }
+            ]
+          }
+        },
+        {
+          "segment_index": 1,
+          "mode": "ride",
+          "from_node_id": null,
+          "to_node_id": null,
+          "from_station_id": "K08",
+          "to_station_id": "K11",
+          "line_id": "karasuma",
+          "trip_id": "karasuma_k08_k11_weekday_service_0830",
+          "direction_id": 1,
+          "distance_m": 0.0,
+          "base_travel_minutes": 6.0,
+          "transfer_minutes": null,
+          "edge_ids": [
+            15,
+            16,
+            17
+          ],
+          "transfer_ids": [],
+          "path_node_ids": [],
+          "polyline": {
+            "coordinates": [
+              {
+                "lon": 135.7596,
+                "lat": 35.0108
+              },
+              {
+                "lon": 135.7597,
+                "lat": 35.0025
+              },
+              {
+                "lon": 135.7585,
+                "lat": 34.9871
+              }
+            ]
+          }
+        },
+        {
+          "segment_index": 2,
+          "mode": "transfer",
+          "from_node_id": null,
+          "to_node_id": null,
+          "from_station_id": "K11",
+          "to_station_id": "T13",
+          "line_id": null,
+          "trip_id": null,
+          "direction_id": null,
+          "distance_m": null,
+          "base_travel_minutes": null,
+          "transfer_minutes": 4.0,
+          "edge_ids": [],
+          "transfer_ids": [
+            1
+          ],
+          "path_node_ids": [],
+          "polyline": null
+        },
+        {
+          "segment_index": 3,
+          "mode": "ride",
+          "from_node_id": null,
+          "to_node_id": null,
+          "from_station_id": "T13",
+          "to_station_id": "T15",
+          "line_id": "tozai",
+          "trip_id": "tozai_t13_t15_weekday_service_0842",
+          "direction_id": 1,
+          "distance_m": 0.0,
+          "base_travel_minutes": 4.0,
+          "transfer_minutes": null,
+          "edge_ids": [
+            38,
+            39
+          ],
+          "transfer_ids": [],
+          "path_node_ids": [],
+          "polyline": {
+            "coordinates": [
+              {
+                "lon": 135.7596,
+                "lat": 35.0108
+              },
+              {
+                "lon": 135.7503,
+                "lat": 35.0119
+              },
+              {
+                "lon": 135.7417,
+                "lat": 35.011
+              }
+            ]
+          }
+        },
+        {
+          "segment_index": 4,
+          "mode": "walk",
+          "from_node_id": 129882,
+          "to_node_id": 129900,
+          "from_station_id": "T15",
+          "to_station_id": null,
+          "line_id": null,
+          "trip_id": null,
+          "direction_id": null,
+          "distance_m": 95.0,
+          "base_travel_minutes": 1.4,
+          "transfer_minutes": null,
+          "edge_ids": [],
+          "transfer_ids": [],
+          "path_node_ids": [
+            129882,
+            129890,
+            129900
+          ],
+          "polyline": {
+            "coordinates": [
+              {
+                "lon": 135.7419,
+                "lat": 35.0111
+              },
+              {
+                "lon": 135.7418,
+                "lat": 35.011
+              },
+              {
+                "lon": 135.7417,
+                "lat": 35.011
+              }
+            ]
+          }
+        }
+      ],
+      "visited_station_ids": [
+        "K08",
+        "K09",
+        "K10",
+        "K11",
+        "T13",
+        "T14",
+        "T15"
+      ],
+      "visited_line_ids": [
+        "karasuma",
+        "tozai"
+      ],
+      "cost_breakdown": {
+        "total_cost": 17.0,
+        "walking_cost": 4.0,
+        "ride_cost": 10.0,
+        "transfer_cost": 4.0,
+        "penalty_cost": -1.0
+      },
+      "warnings": [
+        {
+          "code": "transfer_congestion",
+          "message": "Transfer time at Karasuma Oike is increased under the active scenario."
+        }
+      ]
+    }
+  ],
+  "computed_candidate_count": 2,
+  "selected_route_id": "route_001",
+  "debug": {
+    "origin_candidate_station_ids": [
+      "K08",
+      "T13"
+    ],
+    "destination_candidate_station_ids": [
+      "T15",
+      "T14"
+    ],
+    "explored_graph_nodes": 4821,
+    "explored_subway_states": 41
+  },
+  "warnings": []
+}

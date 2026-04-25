@@ -21,6 +21,8 @@ from app.db.models.views import (
     StationDepartureBoardView,
 )
 
+from app.db.models.etl_job import ETLJobRun, ETLJobStep
+
 __all__ = [
     "Line",
     "Station",
@@ -50,4 +52,6 @@ __all__ = [
     "RoutingEdgesActiveView",
     "LatestPredictedStopTimesView",
     "StationDepartureBoardView",
+    "ETLJobRun",
+    "ETLJobStep"
 ]
