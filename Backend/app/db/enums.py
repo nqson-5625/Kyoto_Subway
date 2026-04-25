@@ -128,3 +128,8 @@ class RouteRequestResultStatus(StrEnum):
 class RoutingEdgeType(StrEnum):
     RIDE = "ride"
     TRANSFER = "transfer"
+
+class ETLJobStatus(StrEnum):
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILED = "failed"

@@ -1,0 +1,1 @@
+CALL sp_run_operational_etl(CURRENT_DATE, NULL, 1440);
