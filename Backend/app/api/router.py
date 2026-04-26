@@ -1,6 +1,7 @@
-from fastapi import APIRouter # Tạo Router tổng gom nhiều router lại
+from fastapi import APIRouter
+from app.api.v1 import stations, routes
 
-from app.api.v1 import health_router
+api_router = APIRouter()
 
-api_router = APIRouter(prefix="/api")
-api_router.include_router(health_router) 
+api_router.include_router(stations.router)
+api_router.include_router(routes.router)
