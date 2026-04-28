@@ -1,12 +1,14 @@
 import heapq
+from fastapi import HTTPException
 from app.db.repositories.edge_repository import EdgeRepository
+
 
 class RouteService:
 
     def __init__(self, db):
         self.repo = EdgeRepository(db)
 
-    def shortest_path(self, start_id, end_id):
+    def shortest_path(self, start_id: str, end_id: str):
 
         edges = self.repo.get_active_edges()
 
@@ -31,11 +33,17 @@ class RouteService:
 
             if node == end_id:
                 return {
-                    "minutes": cost,
+                    "minutes": int(cost),
                     "path": path
                 }
 
-            for nxt, w in graph.get(node, []):
-                heapq.heappush(pq, (cost + w, nxt, path))
+            for nxt, weight in graph.get(node, []):
+                heapq.heappush(
+                    pq,
+                    (cost + weight, nxt, path)
+                )
 
-        return None
+        raise HTTPException(
+            status_code=404,
+            detail="No route found"
+        )
