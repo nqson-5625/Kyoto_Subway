@@ -8,27 +8,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mặc định nạp danh sách Ga
     fetchTargets('station');
 
-    // Chuyển đổi danh sách đối tượng khi thay đổi loại sự cố
-    document.getElementById('eventType').addEventListener('change', (e) => {
+    // Chuyển đổi danh sách đối tượng & Đổi màu khi thay đổi loại sự cố
+    const eventTypeSelect = document.getElementById('eventType');
+    eventTypeSelect.addEventListener('change', (e) => {
         fetchTargets(e.target.value);
+        
+        // Đổi màu chữ
+        const colors = { 'station': '#3498db', 'line': '#e67e22', 'trip': '#9b59b6', 'edge': '#1abc9c' };
+        eventTypeSelect.style.color = colors[eventTypeSelect.value] || 'white';
     });
+    eventTypeSelect.dispatchEvent(new Event('change'));
 
+    // Đổi màu chữ khi thay đổi trạng thái
+    const eventStatusSelect = document.getElementById('eventStatus');
+    eventStatusSelect.addEventListener('change', function() {
+        const colors = { 'normal': '#2ecc71', 'warning': '#f1c40f', 'incident': '#e74c3c', 'maintenance': '#bdc3c7' };
+        this.style.color = colors[this.value] || 'white';
+    });
+    eventStatusSelect.dispatchEvent(new Event('change'));
+
+    // Lắng nghe nút Submit
     document.getElementById('submitAdminBtn').addEventListener('click', postStatusEvent);
 });
 
 // =====================================================================
-// [NHẬN TỪ BACKEND]: Lấy danh sách đối tượng (GET /stations, /lines, etc.)
+// [NHẬN TỪ BACKEND]: Lấy danh sách đối tượng
 // =====================================================================
 async function fetchTargets(type) {
     const targetSelect = document.getElementById('targetList');
     targetSelect.innerHTML = '<option>Đang đồng bộ...</option>';
     
-    // Mapping loại sự cố với Endpoint GET tương ứng
     const endpoints = {
         'station': '/stations',
         'line': '/lines',
         'trip': '/trips',
-        'edge': '/edge-status-events' // Hoặc endpoint chứa danh sách cạnh
+        'edge': '/edge-status-events'
     };
 
     try {
@@ -47,7 +61,7 @@ async function fetchTargets(type) {
 }
 
 // =====================================================================
-// [GỬI VỀ BACKEND]: Phát hành sự kiện mới (POST /...-status-events)
+// [GỬI VỀ BACKEND]: Phát hành sự kiện mới
 // =====================================================================
 async function postStatusEvent() {
     const type = document.getElementById('eventType').value;
@@ -60,7 +74,6 @@ async function postStatusEvent() {
     msgDiv.innerText = "📡 Đang truyền tín hiệu tới server...";
     msgDiv.style.color = "#3498db";
 
-    // Mapping loại sự cố với Endpoint POST tương ứng từ danh sách của bạn
     const postEndpoints = {
         'station': '/station-status-events',
         'line': '/line-status-events',
@@ -73,13 +86,13 @@ async function postStatusEvent() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                [`${type}_id`]: targetId, // Dynamic key: station_id, line_id, v.v.
+                [`${type}_id`]: targetId,
                 status: status,
                 timestamp: new Date().toISOString()
             })
         });
         
-        if(response.ok) {
+        if(response.ok || response.status === 201) {
             msgDiv.innerText = "🚀 Cập nhật hệ thống thành công!";
             msgDiv.style.color = "#2ecc71";
         } else {
