@@ -10,6 +10,12 @@ class RouteService:
 
     def shortest_path(self, start_id: str, end_id: str):
 
+        if start_id == end_id:
+            return {
+                "minutes": 0,
+                "path": [start_id]
+            }
+
         edges = self.repo.get_active_edges()
 
         graph = {}
@@ -17,6 +23,11 @@ class RouteService:
         for e in edges:
             graph.setdefault(e.from_station_id, []).append(
                 (e.to_station_id, e.travel_time_min)
+            )
+
+            
+            graph.setdefault(e.to_station_id, []).append(
+                (e.from_station_id, e.travel_time_min)
             )
 
         pq = [(0, start_id, [])]
