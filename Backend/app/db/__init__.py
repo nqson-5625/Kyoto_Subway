@@ -20,5 +20,6 @@ from app.db.enums import (
     PredictionSource,
     RoutingStatusSource,
     RouteRequestResultStatus,
-    RoutingEdgeType
+    RoutingEdgeType,
+    ETLJobStatus
 )

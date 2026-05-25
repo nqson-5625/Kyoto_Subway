@@ -1,4 +1,3 @@
-from fastapi import APIRouter
 from app.api.v1 import stations, routes, health
 
 api_router = APIRouter()

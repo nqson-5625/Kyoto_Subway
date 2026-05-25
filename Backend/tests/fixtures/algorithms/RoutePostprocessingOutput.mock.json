@@ -1,0 +1,303 @@
+{
+  "status": "success",
+  "origin": {
+    "lon": 135.7589,
+    "lat": 35.0103
+  },
+  "destination": {
+    "lon": 135.7417,
+    "lat": 35.011
+  },
+  "generated_at": "2026-04-23T10:15:00Z",
+  "selected_route_id": "route_001",
+  "routes": [
+    {
+      "route_id": "route_001",
+      "is_selected": true,
+      "summary": "Walk 3 min to Karasuma Oike, ride Karasuma Line, transfer once, then ride Tozai Line to Nijo and walk 1 min.",
+      "headsign": "Uzumasa Tenjingawa",
+      "entry_station": {
+        "station_id": "K08",
+        "station_name": "Karasuma Oike",
+        "line_id": "karasuma",
+        "line_station_order": 8
+      },
+      "exit_station": {
+        "station_id": "T15",
+        "station_name": "Nijo",
+        "line_id": "tozai",
+        "line_station_order": 15
+      },
+      "transfer_count": 1,
+      "ride_segment_count": 2,
+      "walk_segment_count": 2,
+      "time_breakdown": {
+        "walking_minutes": 4.0,
+        "in_vehicle_minutes": 10.0,
+        "transfer_minutes": 4.0,
+        "waiting_minutes": 2.0,
+        "total_minutes": 20.0
+      },
+      "instructions": [
+        {
+          "step_index": 1,
+          "mode": "walk",
+          "title": "Walk to Karasuma Oike Station",
+          "description": "Walk from your origin point to station K08 (Karasuma Oike).",
+          "from_station": null,
+          "to_station": {
+            "station_id": "K08",
+            "station_name": "Karasuma Oike",
+            "line_id": "karasuma",
+            "line_station_order": 8
+          },
+          "line_id": null,
+          "trip_id": null,
+          "duration_minutes": 2.6,
+          "distance_m": 180.5,
+          "polyline": {
+            "coordinates": [
+              {
+                "lon": 135.7589,
+                "lat": 35.0103
+              },
+              {
+                "lon": 135.759,
+                "lat": 35.0105
+              },
+              {
+                "lon": 135.7591,
+                "lat": 35.0107
+              }
+            ]
+          }
+        },
+        {
+          "step_index": 2,
+          "mode": "ride",
+          "title": "Take Karasuma Line toward Kyoto / Takeda",
+          "description": "Board at K08 and ride to K11.",
+          "from_station": {
+            "station_id": "K08",
+            "station_name": "Karasuma Oike",
+            "line_id": "karasuma",
+            "line_station_order": 8
+          },
+          "to_station": {
+            "station_id": "K11",
+            "station_name": "Kyoto",
+            "line_id": "karasuma",
+            "line_station_order": 11
+          },
+          "line_id": "karasuma",
+          "trip_id": "karasuma_k08_k11_weekday_service_0830",
+          "duration_minutes": 6.0,
+          "distance_m": null,
+          "polyline": {
+            "coordinates": [
+              {
+                "lon": 135.7596,
+                "lat": 35.0108
+              },
+              {
+                "lon": 135.7597,
+                "lat": 35.0025
+              },
+              {
+                "lon": 135.7585,
+                "lat": 34.9871
+              }
+            ]
+          }
+        },
+        {
+          "step_index": 3,
+          "mode": "transfer",
+          "title": "Transfer at Karasuma Oike",
+          "description": "Transfer from Karasuma Line to Tozai Line.",
+          "from_station": {
+            "station_id": "K11",
+            "station_name": "Kyoto",
+            "line_id": "karasuma",
+            "line_station_order": 11
+          },
+          "to_station": {
+            "station_id": "T13",
+            "station_name": "Karasuma Oike",
+            "line_id": "tozai",
+            "line_station_order": 13
+          },
+          "line_id": null,
+          "trip_id": null,
+          "duration_minutes": 4.0,
+          "distance_m": null,
+          "polyline": null
+        },
+        {
+          "step_index": 4,
+          "mode": "ride",
+          "title": "Take Tozai Line toward Uzumasa Tenjingawa",
+          "description": "Board at T13 and ride to T15.",
+          "from_station": {
+            "station_id": "T13",
+            "station_name": "Karasuma Oike",
+            "line_id": "tozai",
+            "line_station_order": 13
+          },
+          "to_station": {
+            "station_id": "T15",
+            "station_name": "Nijo",
+            "line_id": "tozai",
+            "line_station_order": 15
+          },
+          "line_id": "tozai",
+          "trip_id": "tozai_t13_t15_weekday_service_0842",
+          "duration_minutes": 4.0,
+          "distance_m": null,
+          "polyline": {
+            "coordinates": [
+              {
+                "lon": 135.7596,
+                "lat": 35.0108
+              },
+              {
+                "lon": 135.7503,
+                "lat": 35.0119
+              },
+              {
+                "lon": 135.7417,
+                "lat": 35.011
+              }
+            ]
+          }
+        },
+        {
+          "step_index": 5,
+          "mode": "walk",
+          "title": "Walk to destination",
+          "description": "Walk from Nijo Station to your destination point.",
+          "from_station": {
+            "station_id": "T15",
+            "station_name": "Nijo",
+            "line_id": "tozai",
+            "line_station_order": 15
+          },
+          "to_station": null,
+          "line_id": null,
+          "trip_id": null,
+          "duration_minutes": 1.4,
+          "distance_m": 95.0,
+          "polyline": {
+            "coordinates": [
+              {
+                "lon": 135.7419,
+                "lat": 35.0111
+              },
+              {
+                "lon": 135.7418,
+                "lat": 35.011
+              },
+              {
+                "lon": 135.7417,
+                "lat": 35.011
+              }
+            ]
+          }
+        }
+      ],
+      "eta_stops": [
+        {
+          "station_id": "K08",
+          "station_name": "Karasuma Oike",
+          "scheduled_arrival": "08:28:00",
+          "scheduled_departure": "08:30:00",
+          "predicted_arrival": "08:29:00",
+          "predicted_departure": "08:31:00",
+          "delay_minutes": 1.0
+        },
+        {
+          "station_id": "K11",
+          "station_name": "Kyoto",
+          "scheduled_arrival": "08:36:00",
+          "scheduled_departure": "08:36:00",
+          "predicted_arrival": "08:37:00",
+          "predicted_departure": "08:37:00",
+          "delay_minutes": 1.0
+        },
+        {
+          "station_id": "T13",
+          "station_name": "Karasuma Oike",
+          "scheduled_arrival": "08:40:00",
+          "scheduled_departure": "08:42:00",
+          "predicted_arrival": "08:42:00",
+          "predicted_departure": "08:44:00",
+          "delay_minutes": 2.0
+        },
+        {
+          "station_id": "T15",
+          "station_name": "Nijo",
+          "scheduled_arrival": "08:46:00",
+          "scheduled_departure": "08:46:00",
+          "predicted_arrival": "08:48:00",
+          "predicted_departure": "08:48:00",
+          "delay_minutes": 2.0
+        }
+      ],
+      "evaluation": {
+        "score": 92.5,
+        "rank": 1,
+        "fewer_transfers_better": 90.0,
+        "shorter_time_better": 94.0,
+        "less_walking_better": 89.0,
+        "less_disruption_better": 97.0
+      },
+      "full_polyline": {
+        "coordinates": [
+          {
+            "lon": 135.7589,
+            "lat": 35.0103
+          },
+          {
+            "lon": 135.759,
+            "lat": 35.0105
+          },
+          {
+            "lon": 135.7591,
+            "lat": 35.0107
+          },
+          {
+            "lon": 135.7596,
+            "lat": 35.0108
+          },
+          {
+            "lon": 135.7597,
+            "lat": 35.0025
+          },
+          {
+            "lon": 135.7585,
+            "lat": 34.9871
+          },
+          {
+            "lon": 135.7596,
+            "lat": 35.0108
+          },
+          {
+            "lon": 135.7503,
+            "lat": 35.0119
+          },
+          {
+            "lon": 135.7417,
+            "lat": 35.011
+          }
+        ]
+      },
+      "warnings": [
+        {
+          "code": "eta_partial_realtime",
+          "message": "ETA uses mixed scheduled and predicted data."
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

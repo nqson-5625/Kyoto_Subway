@@ -645,6 +645,62 @@ CREATE TABLE IF NOT EXISTS route_request_logs (
     CONSTRAINT route_request_logs_distinct_stations_chk CHECK (origin_station_id <> destination_station_id) -- Ga xuất phát và ga đích phải khác nhau
 );
 
+-- Bảng log tổng: Lưu trạng thái của mỗi lần chạy pipeline
+CREATE TABLE IF NOT EXISTS etl_job_runs (
+    job_run_id BIGSERIAL PRIMARY KEY,
+
+    -- Tên job/procedure
+    job_name TEXT NOT NULL,
+
+    -- Ngày service đang xử lý
+    service_date DATE,
+
+    -- Scenario nếu có; NULL nghĩa là baseline
+    scenario_id TEXT,
+
+    -- Trạng thái tổng của job
+    -- running: đang chạy
+    -- success: chạy xong thành công
+    -- failed: có lỗi và dừng
+    status TEXT NOT NULL CHECK (status IN ('running', 'success', 'failed')),
+
+    -- Step hiện tại hoặc step fail cuối cùng
+    current_step TEXT,
+
+    -- Thời điểm bắt đầu / kết thúc
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at TIMESTAMPTZ,
+
+    -- Thông tin lỗi tổng quát
+    error_message TEXT,
+    error_detail TEXT,
+    error_hint TEXT,
+    error_context TEXT
+);
+
+-- Bảng log từng step: Lưu trạng thái chi tiết cho từng step trong một job run
+CREATE TABLE IF NOT EXISTS etl_job_steps (
+    job_step_id BIGSERIAL PRIMARY KEY,
+
+    -- Khóa ngoại về job run tổng
+    job_run_id BIGINT NOT NULL REFERENCES etl_job_runs(job_run_id) ON DELETE CASCADE,
+
+    -- Tên step
+    step_name TEXT NOT NULL,
+
+    -- running / success / failed
+    status TEXT NOT NULL CHECK (status IN ('running', 'success', 'failed')),
+
+    -- Thời gian bắt đầu / kết thúc step
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at TIMESTAMPTZ,
+
+    -- Thông tin lỗi nếu step fail
+    error_message TEXT,
+    error_detail TEXT,
+    error_hint TEXT,
+    error_context TEXT
+);
 
 
 
@@ -694,6 +750,10 @@ CREATE INDEX IF NOT EXISTS idx_next_departures_station_line_time ON next_departu
 CREATE INDEX IF NOT EXISTS idx_next_departures_service_date_station ON next_departures (service_date, station_id, updated_at DESC); -- Tăng tốc query chuyến sắp rời theo ngày service và ga
 CREATE INDEX IF NOT EXISTS idx_next_departures_departure_at ON next_departures (predicted_departure_at); -- Tăng tốc sắp xếp và lọc theo giờ rời tuyệt đối
 CREATE INDEX IF NOT EXISTS idx_route_request_logs_created_at ON route_request_logs (created_at DESC); -- Tăng tốc phân tích log theo thời gian
+CREATE INDEX idx_etl_job_runs_started_at ON etl_job_runs(started_at DESC);
+CREATE INDEX idx_etl_job_runs_status ON etl_job_runs(status);
+CREATE INDEX idx_etl_job_steps_job_run_id ON etl_job_steps(job_run_id);
+CREATE INDEX idx_etl_job_steps_status ON etl_job_steps(status);
 
 -- ==================================================================================================
 -- 23) Chuyển các bảng time-series thành hypertable
