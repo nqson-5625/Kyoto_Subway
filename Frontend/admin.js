@@ -93,13 +93,13 @@ async function postStatusEvent() {
         });
         
         if(response.ok || response.status === 201) {
-            msgDiv.innerText = "🚀 Cập nhật hệ thống thành công!";
+            msgDiv.innerText = " Cập nhật hệ thống thành công!";
             msgDiv.style.color = "#2ecc71";
         } else {
             throw new Error();
         }
     } catch (err) {
-        msgDiv.innerText = "❌ Lỗi: Backend từ chối yêu cầu";
+        msgDiv.innerText = " Lỗi: Backend từ chối yêu cầu";
         msgDiv.style.color = "#e74c3c";
     }
 }
