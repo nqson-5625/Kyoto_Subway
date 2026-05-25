@@ -71,7 +71,7 @@ async function postStatusEvent() {
 
     if (!targetId) return;
 
-    msgDiv.innerText = "📡 Đang truyền tín hiệu tới server...";
+    msgDiv.innerText = " Đang truyền tín hiệu tới server...";
     msgDiv.style.color = "#3498db";
 
     const postEndpoints = {
