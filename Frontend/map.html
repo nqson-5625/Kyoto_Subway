@@ -161,23 +161,6 @@
 
         // Xử lý sự kiện click nút bật/tắt
         const toggleBtn = document.getElementById('toggleRailwayBtn');
-        toggleBtn.addEventListener('click', function() {
-            if (isRailwayVisible) {
-                map.removeLayer(railwayNetworkLayer);
-                this.innerText = "Show Railway Network";
-                this.style.backgroundColor = "#38bdf8";
-            } else {
-                map.addLayer(railwayNetworkLayer);
-                this.innerText = "Hide Railway Network";
-                this.style.backgroundColor = "#fb923c"; // Đổi màu khi đang hiển thị
-                
-                // Khớp bản đồ bao quát toàn bộ hệ thống
-                if (railwayNetworkLayer.getLayers().length > 0) {
-                    map.fitBounds(railwayNetworkLayer.getBounds(), { padding: [20, 20] });
-                }
-            }
-            isRailwayVisible = !isRailwayVisible;
-        });
 
         let startMarker = null;
         let endMarker = null;
