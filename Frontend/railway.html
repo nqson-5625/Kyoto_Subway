@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Đường sắt Kyoto</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: #0f172a;
+        }
+        #map { 
+            width: 100%; 
+            height: 100vh; 
+        }
+
+        /* Bảng chú thích */
+        #legend {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background-color: rgba(15, 23, 42, 0.9);
+            border: 2px solid #475569;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            color: #f8fafc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            width: 220px;
+        }
+        #legend h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #38bdf8;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 6px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+        .legend-color {
+            width: 24px;
+            height: 6px;
+            border-radius: 3px;
+            margin-right: 12px;
+            display: inline-block;
+        }
+        .subway-color { background-color: #00f5d4; }
+        .rail-color { background-color: #ffee32; }
+        .lightrail-color { background-color: #ff007f; }
+
+        /* Nút quay lại bản đồ - Điều chỉnh lại vị trí sát góc dưới */
+        #backToMapBtn {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            z-index: 1000;
+            background-color: rgba(15, 23, 42, 0.9);
+            color: #38bdf8;
+            border: 2px solid #38bdf8;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', sans-serif;
+            display: inline-flex;
+            align-items: center;
+        }
+        #backToMapBtn:hover {
+            background-color: #38bdf8;
+            color: #0f172a;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="legend">
+        <h3>CHÚ THÍCH</h3>
+        <div class="legend-item">
+            <span class="legend-color subway-color"></span>
+            <span>Subway </span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color rail-color"></span>
+            <span>Rail </span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color lightrail-color"></span>
+            <span>Light Rail </span>
+        </div>
+    </div>
+
+    <a href="map.html" id="backToMapBtn">⬅ Quay lại Bản đồ</a>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="Mapdata.js"></script>
+
+    <script>
+        const map = L.map('map', { zoomControl: false }).setView([35.0116, 135.7681], 13);
+        
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Bản đồ nền: Ẩn các tuyến đường ray tĩnh
+        if (typeof kyotoGeoData !== 'undefined') {
+            L.geoJSON(kyotoGeoData, {
+                filter: function(feature) {
+                    const r = feature.properties ? feature.properties.railway : '';
+                    const pt = feature.properties ? feature.properties.public_transport : '';
+                    return !(r === 'subway' || r === 'rail' || r === 'light_rail' || r === 'station' || pt === 'station' || feature.geometry.type === 'Point');
+                },
+                style: { color: "#555", weight: 2, dashArray: "10, 10", fillOpacity: 0 }
+            }).addTo(map);
+        }
+        // Tạo một layer group độc lập chứa hệ thống đường sắt và các nhà ga
+        let railwayNetworkLayer = L.featureGroup().addTo(map); // THAY ĐỔI: Tự động add trực tiếp vào map khi khởi tạo
+
+        if (typeof kyotoGeoData !== 'undefined') {
+            L.geoJSON(kyotoGeoData, {
+                filter: function(feature) {
+                    const r = feature.properties ? feature.properties.railway : '';
+                    const pt = feature.properties ? feature.properties.public_transport : '';
+                    return (r === 'subway' || r === 'rail' || r === 'light_rail' || r === 'station' || pt === 'station');
+                },
+                pointToLayer: function (feature, latlng) {
+                    const r = feature.properties ? feature.properties.railway : '';
+                    let dotColor = '#ffffff';
+                    
+                    if (r === 'subway') dotColor = '#00f5d4';
+                    else if (r === 'rail') dotColor = '#ffee32';
+                    else if (r === 'light_rail') dotColor = '#ff007f';
+
+                    return L.circleMarker(latlng, {
+                        radius: 5,
+                        fillColor: "#ffffff",
+                        color: dotColor,
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 1
+                    });
+                },
+                style: function(feature) {
+                    const r = feature.properties ? feature.properties.railway : '';
+                    let strokeColor = '#95a5a6';
+                    
+                    if (r === 'subway') {
+                        strokeColor = '#00f5d4';
+                    } else if (r === 'rail') {
+                        strokeColor = '#ffee32';
+                    } else if (r === 'light_rail') {
+                        strokeColor = '#ff007f';
+                    }
+                    
+                    return { color: strokeColor, weight: 4, opacity: 0.9 };
+                },
+                onEachFeature: function(feature, layer) {
+                    if (feature.properties) {
+                        let englishName = feature.properties['name:en'] || feature.properties.name_en || feature.properties.name || 'Station';
+                        let type = feature.properties.railway || 'station';
+                        
+                        let popupContent = `
+                            <div style="font-family: Arial, sans-serif; color: #1e293b;">
+                                <strong style="font-size: 13px;">🚉 ${englishName}</strong><br/>
+                                <span style="font-size: 11px; color: #64748b;">Type: ${type.toUpperCase()}</span>
+                            </div>
+                        `;
+                        layer.bindPopup(popupContent);
+                    }
+                }
+            }).addTo(railwayNetworkLayer);
+
+            // THAY ĐỔI: Tự động căn chỉnh bản đồ vừa vặn với mạng lưới đường sắt ngay khi vừa load xong dữ liệu
+            if (railwayNetworkLayer.getLayers().length > 0) {
+                map.fitBounds(railwayNetworkLayer.getBounds(), { padding: [20, 20] });
+            }
+        }
+    </script>
+</body>
+</html>
