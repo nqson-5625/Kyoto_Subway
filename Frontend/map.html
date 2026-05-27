@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bản đồ Tìm Đường Kyoto</title>
+    <title>Bản đồ Tìm Đường Kyoto Subway AI</title>
     
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
@@ -12,244 +13,312 @@
             --sidebar-bg: #2c3e50;
             --accent: #3498db;
             --text-light: #ecf0f1;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
         }
 
-        body { margin: 0; padding: 0; display: flex; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        body { 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            height: 100vh; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            overflow: hidden; 
+        }
         
         #sidebar { 
-            width: 360px; background-color: var(--sidebar-bg); color: var(--text-light);
-            padding: 20px; box-shadow: 4px 0 15px rgba(0,0,0,0.3); z-index: 1000; 
-            display: flex; flex-direction: column; gap: 15px; overflow-y: auto;
+            width: 360px; 
+            background-color: var(--sidebar-bg); 
+            color: var(--text-light);
+            padding: 20px; 
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3); 
+            z-index: 1000; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
-        #map { flex-grow: 1; height: 100vh; z-index: 1; position: relative; }
-
-        h2 { margin: 0; font-size: 18px; text-align: center; color: var(--accent); border-bottom: 1px solid #444; padding-bottom: 10px; text-transform: uppercase; }
-
-        .control-group { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        label { font-weight: bold; font-size: 12px; color: #bdc3c7; margin-bottom: 8px; display: block; }
-
-        select, input { width: 100%; padding: 10px; border-radius: 6px; border: none; background: #34495e; color: white; margin-bottom: 8px; outline: none; box-sizing: border-box;}
-        input[readonly] { cursor: not-allowed; opacity: 0.8; font-size: 13px; }
-
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; transition: 0.3s; }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-warning { background: #e74c3c; color: white; } 
-        .btn:hover { opacity: 0.8; }
-
-        .perf-card { background: #1a252f; border: 1px solid var(--accent); border-radius: 6px; padding: 10px; }
-        .perf-item { font-size: 13px; padding: 5px 0; border-bottom: 1px solid #34495e; display: flex; justify-content: space-between; }
-        .perf-item:last-child { border: none; }
-        .perf-value { color: var(--accent); font-family: monospace; font-weight: bold; font-size: 15px; }
-        #railway-link {
-    position: absolute; top: 20px; right: 180px; background: rgba(44, 62, 80, 0.9); color: white;
-    padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; z-index: 1000;
-    border: 2px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s; display: flex; align-items: center; gap: 8px;
-}
-#railway-link:hover { background: var(--accent); transform: scale(1.05); }
-
-        #admin-link {
-            position: absolute; top: 20px; right: 20px; background: rgba(44, 62, 80, 0.9); color: white;
-            padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; z-index: 1000;
-            border: 2px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s; display: flex; align-items: center; gap: 8px;
+        #map { 
+            flex-grow: 1; 
+            height: 100vh; 
+            z-index: 1; 
+            position: relative; 
         }
-        #admin-link:hover { background: var(--accent); transform: scale(1.05); }
+
+        h2 { 
+            margin: 0; 
+            font-size: 18px; 
+            text-align: center; 
+            color: var(--accent); 
+            border-bottom: 1px solid #444; 
+            padding-bottom: 10px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+
+        .control-group { 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 8px; 
+            padding: 12px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+        }
+        
+        label { 
+            font-weight: bold; 
+            font-size: 11px; 
+            color: #bdc3c7; 
+            margin-bottom: 6px; 
+            display: block; 
+            text-transform: uppercase;
+        }
+
+        select, input { 
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 6px; 
+            border: none; 
+            background: #34495e; 
+            color: white; 
+            margin-bottom: 8px; 
+            outline: none; 
+            box-sizing: border-box;
+            font-size: 13px;
+        }
+        
+        input[readonly] { 
+            cursor: not-allowed; 
+            opacity: 0.85; 
+            background: #1a252f;
+            border-left: 3px solid var(--accent);
+        }
+
+        .btn { 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin-top: 4px; 
+            transition: all 0.2s ease; 
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+        
+        .btn-primary { 
+            background: var(--accent); 
+            color: white; 
+        }
+        
+        .btn-warning { 
+            background: var(--danger-color); 
+            color: white; 
+        } 
+        
+        .btn:hover { 
+            opacity: 0.9; 
+            transform: translateY(-1px);
+        }
+        
+        .btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Thẻ kết quả hiệu năng */
+        .perf-card { 
+            background: #1a252f; 
+            border: 1px solid var(--accent); 
+            border-radius: 6px; 
+            padding: 10px; 
+        }
+        
+        .perf-item { 
+            font-size: 13px; 
+            padding: 6px 0; 
+            border-bottom: 1px solid #34495e; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        
+        .perf-item:last-child { 
+            border: none; 
+        }
+        
+        .perf-value { 
+            color: var(--success-color); 
+            font-family: 'Courier New', monospace; 
+            font-weight: bold; 
+            font-size: 15px; 
+        }
+
+        /* Nhật ký sự cố hệ thống */
+        #statusList {
+            max-height: 120px;
+            overflow-y: auto;
+            background: #1a252f;
+            border-radius: 6px;
+            padding: 5px;
+            border: 1px solid #444;
+        }
+        
+        .event-item {
+            font-size: 12px;
+            padding: 6px;
+            border-bottom: 1px solid #2c3e50;
+            color: #f1c40f;
+        }
+        
+        .event-item.line {
+            color: #e67e22;
+        }
+        
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Hệ thống Toast thông báo nổi */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .toast {
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 240px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .toast.success { border-left: 5px solid var(--success-color); background: #1e2b22; }
+        .toast.error { border-left: 5px solid var(--danger-color); background: #2c1e1e; }
+        .toast.warning { border-left: 5px solid #f1c40f; background: #2b2a1e; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Điều hướng góc trên bản đồ */
+        .top-nav-links {
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1000; 
+            display: flex; 
+            gap: 12px;
+        }
+
+        .nav-link {
+            background: rgba(44, 62, 80, 0.9); 
+            color: white;
+            padding: 10px 18px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 13px;
+            border: 2px solid var(--accent); 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
+            transition: all 0.2s ease; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+        }
+        
+        .nav-link:hover { 
+            background: var(--accent); 
+            transform: scale(1.03); 
+        }
     </style>
 </head>
 <body>
 
+    <!-- SIDEBAR ĐIỀU KHIỂN -->
     <div id="sidebar">
-        <h2>Hệ Thống Tìm Đường</h2>
+        <h2>Hệ Thống Tìm Đường AI</h2>
 
+        <!-- Chọn điểm -->
         <div class="control-group">
-            <label>1. CHỌN ĐỊA ĐIỂM</label>
-            <input type="text" id="start-input" placeholder="Điểm bắt đầu..." readonly>
-            <input type="text" id="end-input" placeholder="Điểm kết thúc..." readonly>
-            <button class="btn btn-warning" onclick="clearSelection()">✖ Hủy điểm đã chọn</button>
+            <label>1. Chọn vị trí trên bản đồ</label>
+            <input type="text" id="start-input" placeholder="Click bản đồ chọn điểm xuất phát..." readonly>
+            <input type="text" id="end-input" placeholder="Click bản đồ chọn đích đến..." readonly>
+            <button class="btn btn-warning" id="clearBtn">✖ Hủy các điểm đã chọn</button>
         </div>
 
+        <!-- Cấu hình kịch bản mô phỏng từ Backend -->
         <div class="control-group">
-            <label>2. CHỌN THUẬT TOÁN</label>
-            <select id="algoSelect">
-                <option value="A*">Thuật toán A*</option>
-                <option value="Dijkstra">Thuật toán Dijkstra</option>
-                <option value="BFS">Breadth-First Search (BFS)</option>
-                <option value="DFS">Depth-First Search (DFS)</option>
+            <label>2. Ngày dịch vụ & Sự cố mô phỏng</label>
+            <input type="date" id="serviceDate">
+            <select id="scenarioSelect">
+                <option value="">-- Đang tải kịch bản... --</option>
             </select>
-            <button class="btn btn-primary" onclick="findPath()"> TÌM ĐƯỜNG ĐI</button>
         </div>
 
+        <!-- Thuật toán -->
+        <div class="control-group">
+            <label>3. Thuật toán tìm kiếm</label>
+            <select id="algoSelect">
+                <option value="A*">Thuật toán kiếm đường A*</option>
+                <option value="Dijkstra">Thuật toán Dijkstra thông thường</option>
+                <option value="BFS">Tìm kiếm theo chiều rộng (BFS)</option>
+                <option value="DFS">Tìm kiếm theo chiều sâu (DFS)</option>
+            </select>
+            <button class="btn btn-primary" id="findPathBtn">Tìm đường đi tối ưu</button>
+        </div>
+
+        <!-- Khung hiển thị hiệu năng tính toán -->
         <div class="control-group" id="perf-section" style="display: none;">
-            <label>KẾT QUẢ TÍNH TOÁN</label>
+            <label>Kết quả phân tích thuật toán</label>
             <div class="perf-card">
-                <div class="perf-item">Thời gian: <span class="perf-value" id="p-time">0 ms</span></div>
-                <div class="perf-item">Độ dài: <span class="perf-value" id="p-dist">0 m</span></div>
-                </div>
-            <p id="route-message" style="color: #f1c40f; font-size: 12px; margin-top: 10px; text-align: center; font-weight: bold;"></p>
+                <div class="perf-item">Thời gian tính toán: <span class="perf-value" id="stat-time">-- ms</span></div>
+                <div class="perf-item">Tổng chiều dài lộ trình: <span class="perf-value" id="stat-length">-- m</span></div>
+            </div>
+        </div>
+
+        <!-- Trạng thái sự cố từ Backend -->
+        <div class="control-group">
+            <label>Nhật ký sự cố thời gian thực</label>
+            <div id="statusList">
+                <div style="text-align:center; color:#888; font-size:11px; padding: 5px;">Đang đồng bộ trạng thái...</div>
+            </div>
         </div>
     </div>
 
+    <!-- KHU VỰC BẢN ĐỒ -->
     <div id="map">
-        <a href="railway.html" id="railway-link">Hệ thống Đường sắt</a>
-        <a href="admin.html" id="admin-link"> Chế độ Admin</a>
+        <div class="top-nav-links">
+            <a href="railway.html" class="nav-link">🚇 Hệ thống Đường sắt</a>
+            <a href="admin.html" class="nav-link">⚙️ Chế độ Admin</a>
+        </div>
     </div>
 
+    <!-- Container chứa thông báo Toast -->
+    <div id="toast-container"></div>
+
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- File chứa dữ liệu bản đồ địa lý Offline (nếu có) -->
     <script src="mapData.js"></script> 
 
-    <script>
-        const map = L.map('map').setView([35.0116, 135.7681], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-        
-        if (typeof kyotoGeoData !== 'undefined') {
-            L.geoJSON(kyotoGeoData, {
-                filter: function(feature) {
-                    const r = feature.properties ? feature.properties.railway : '';
-                    const pt = feature.properties ? feature.properties.public_transport : '';
-                    return !(r === 'subway' || r === 'rail' || r === 'light_rail' || r === 'station' || pt === 'station' || feature.geometry.type === 'Point');
-                },
-                style: { color: "#555", weight: 2, dashArray: "10, 10", fillOpacity: 0 }
-            }).addTo(map);
-        }
-        let railwayNetworkLayer = L.featureGroup();
-        let isRailwayVisible = false;
-
-        if (typeof kyotoGeoData !== 'undefined') {
-            L.geoJSON(kyotoGeoData, {
-                filter: function(feature) {
-                    const r = feature.properties ? feature.properties.railway : '';
-                    const pt = feature.properties ? feature.properties.public_transport : '';
-                    return (r === 'subway' || r === 'rail' || r === 'light_rail' || r === 'station' || pt === 'station');
-                },
-                pointToLayer: function (feature, latlng) {
-                    // Vẽ các nhà ga thành các marker hình tròn
-                    return L.circleMarker(latlng, {
-                        radius: 5,
-                        fillColor: "#ffffff",
-                        color: feature.properties.railway === 'subway' ? '#38bdf8' : '#fb923c',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 1
-                    });
-                },
-                style: function(feature) {
-                    // Phân loại màu cho tuyến đường
-                    const r = feature.properties ? feature.properties.railway : '';
-                    let strokeColor = '#95a5a6';
-                    if (r === 'subway') strokeColor = '#38bdf8';
-                    else if (r === 'rail' || r === 'light_rail') strokeColor = '#fb923c';
-                    
-                    return { color: strokeColor, weight: 4, opacity: 0.9 };
-                },
-                onEachFeature: function(feature, layer) {
-                    // Hiển thị popup tên tiếng Anh cho ga
-                    if (feature.properties) {
-                        let englishName = feature.properties['name:en'] || feature.properties.name_en || feature.properties.name || 'Station';
-                        let type = feature.properties.railway || 'station';
-                        
-                        let popupContent = `
-                            <div style="font-family: Arial, sans-serif; color: #1e293b;">
-                                <strong style="font-size: 13px;">🚉 ${englishName}</strong><br/>
-                                <span style="font-size: 11px; color: #64748b;">Type: ${type.toUpperCase()}</span>
-                            </div>
-                        `;
-                        layer.bindPopup(popupContent);
-                    }
-                }
-            }).addTo(railwayNetworkLayer);
-        }
-
-        // Xử lý sự kiện click nút bật/tắt
-        const toggleBtn = document.getElementById('toggleRailwayBtn');
-
-        let startMarker = null;
-        let endMarker = null;
-        
-        let routeLayerGroup = L.featureGroup().addTo(map);
-
-        map.on('click', function(e) {
-            const latlng = e.latlng;
-            if (!startMarker) {
-                startMarker = L.marker(latlng).addTo(map).bindPopup("<b>A</b> - Xuất phát").openPopup();
-                document.getElementById('start-input').value = `Vĩ: ${latlng.lat.toFixed(4)}, Kinh: ${latlng.lng.toFixed(4)}`;
-            } else if (!endMarker) {
-                endMarker = L.marker(latlng).addTo(map).bindPopup("<b>B</b> - Đích đến").openPopup();
-                document.getElementById('end-input').value = `Vĩ: ${latlng.lat.toFixed(4)}, Kinh: ${latlng.lng.toFixed(4)}`;
-            }
-        });
-
-        function clearSelection() {
-            if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
-            if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
-            routeLayerGroup.clearLayers(); 
-            
-            document.getElementById('start-input').value = "";
-            document.getElementById('end-input').value = "";
-            document.getElementById('perf-section').style.display = 'none';
-        }
-
-        function findPath() {
-            if (!startMarker || !endMarker) {
-                alert("Vui lòng chọn Điểm Bắt Đầu và Điểm Kết Thúc!");
-                return;
-            }
-
-            const requestData = {
-                start: { lat: startMarker.getLatLng().lat, lng: startMarker.getLatLng().lng },
-                end: { lat: endMarker.getLatLng().lat, lng: endMarker.getLatLng().lng },
-                algorithm: document.getElementById('algoSelect').value
-            };
-
-            document.getElementById('perf-section').style.display = 'block';
-            document.getElementById('p-time').innerText = "...";
-            document.getElementById('route-message').innerText = "Đang xử lý...";
-
-            fetch('http://localhost:5000/api/find-path', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('p-time').innerText = data.execution_time + " ms";
-                document.getElementById('p-dist').innerText = data.total_distance + " m";
-                document.getElementById('route-message').innerText = data.message;
-
-                routeLayerGroup.clearLayers();
-
-                data.segments.forEach(segment => {
-                    let isTrainRoute = ['subway', 'metro', 'rail'].includes(segment.mode);
-                    
-                    if (!isTrainRoute) {
-                        let polylineStyle = { color: '#2ecc71', weight: 5, dashArray: '10, 10', opacity: 0.8 };
-                        if (segment.mode !== "walk") polylineStyle = { color: '#95a5a6', weight: 4 };
-                        
-                        let segmentLine = L.polyline(segment.coordinates, polylineStyle);
-                        routeLayerGroup.addLayer(segmentLine);
-                    }
-
-                    if (segment.stations && segment.stations.length > 0) {
-                        segment.stations.forEach(station => {
-                            L.circleMarker([station.lat, station.lng], {
-                                radius: 5,
-                                fillColor: "#fff",
-                                color: "#000",
-                                weight: 2,
-                                opacity: 1
-                            }).bindPopup(`<b>${station.name}</b>`).addTo(routeLayerGroup);
-                        });
-                    }
-                });
-
-                if (routeLayerGroup.getLayers().length > 0) {
-                    map.fitBounds(routeLayerGroup.getBounds());
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Lỗi kết nối Backend!");
-            });
-        }
-    </script>
+    <!-- File Script logic tập trung chính -->
+    <script src="app.js"></script>
 </body>
 </html>
