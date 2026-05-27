@@ -158,7 +158,7 @@ if (clearBtn) {
         document.getElementById('perf-section').style.display = 'none';
         
         isSelectingStart = true;
-        showToast("Đã xóa các điểm đã chọn.");
+        showToast("Đã xóa các điểm đã chọn.", "success");
     });
 }
 
