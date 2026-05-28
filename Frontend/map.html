@@ -290,10 +290,12 @@
         </div>
         <div class="control-group">
     <label> Tìm kiếm địa điểm / Ga tàu</label>
-    <div style="display: flex; gap: 5px;">
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
         <input type="text" id="searchInput" placeholder="Nhập tên đường, ga, địa điểm..." style="margin-bottom: 0;">
         <button class="btn btn-primary" id="searchBtn" style="margin-top: 0; width: 60px; padding: 10px;">Tìm</button>
     </div>
+    <button id="toggleSubwayBtn" class="btn" style="background-color: #8e44ad; color: white;">Hiện hệ thống tàu</button>
+</div>
 </div>
 
         <!-- Trạng thái sự cố từ Backend -->
@@ -308,13 +310,12 @@
     <!-- KHU VỰC BẢN ĐỒ -->
     <div id="map">
         <div class="top-nav-links">
-            <a href="railway.html" class="nav-link"> Hệ thống Đường sắt</a>
-            <a href="admin.html" class="nav-link"> Chế độ Admin</a>
-        </div>
+    <a href="admin.html" class="nav-link"> Chế độ Admin</a>
+</div>
     </div>
     <div id="toast-container"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="mapData.js"></script> 
+    <script src="mapdata.js"></script> 
     <script src="app.js"></script>
 </body>
 </html>
