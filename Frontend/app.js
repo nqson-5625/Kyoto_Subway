@@ -225,8 +225,21 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
                 let polylineStyle;
                 
                 if (isTrainRoute) {
-                    // Tuyến đường sắt/tàu điện ngầm: Màu xanh dương hoặc cam đậm đậm nét
-                    let strokeColor = segment.mode === 'subway' ? '#38bdf8' : '#fb923c';
+                    let strokeColor = '#fb923c';
+                    
+                    if (segment.mode === 'subway') {
+                        // Ép chuỗi dữ liệu đoạn đường để kiểm tra tên tuyến Karasuma hay Tozai
+                        const segmentStr = JSON.stringify(segment).toLowerCase();
+                        
+                        if (segmentStr.includes('karasuma')) {
+                            strokeColor = '#4CAF50'; // Tuyến Karasuma - Xanh lá
+                        } else if (segmentStr.includes('tozai')) {
+                            strokeColor = '#E60012'; // Tuyến Tozai - Đỏ
+                        } else {
+                            strokeColor = '#38bdf8';
+                        }
+                    }
+                    
                     polylineStyle = { color: strokeColor, weight: 6, opacity: 0.9 };
                 } else {
                     // Đi bộ hoặc phương thức khác: Nét đứt màu xanh lá cây
@@ -238,10 +251,28 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
                 // 2. Điểm các nhà ga dọc tuyến nếu có
                 if (segment.stations && segment.stations.length > 0) {
                     segment.stations.forEach(station => {
+                        let markerColor = "#1e293b"; 
+                        
+                        if (segment.mode === 'subway') {
+                            // Ép chuỗi thông tin ga hoặc đoạn tuyến để đổi màu viền ga tương ứng
+                            const stationStr = JSON.stringify(station).toLowerCase();
+                            const segmentStr = JSON.stringify(segment).toLowerCase();
+                            
+                            if (stationStr.includes('karasuma') || segmentStr.includes('karasuma')) {
+                                markerColor = '#4CAF50'; // Viền ga xanh lá
+                            } else if (stationStr.includes('tozai') || segmentStr.includes('tozai')) {
+                                markerColor = '#E60012'; // Viền ga đỏ
+                            } else {
+                                markerColor = '#38bdf8'; // Viền ga mặc định
+                            }
+                        } else if (!isTrainRoute) {
+                            markerColor = "#2ecc71"; // Đi bộ
+                        }
+
                         L.circleMarker([station.lat, station.lng], {
                             radius: 5,
                             fillColor: "#fff",
-                            color: isTrainRoute ? "#1e293b" : "#2ecc71",
+                            color: markerColor, // Đã đồng bộ màu viền ga
                             weight: 2,
                             opacity: 1,
                             fillOpacity: 1
@@ -256,7 +287,6 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
         if (routeLayerGroup.getLayers().length > 0) {
             map.fitBounds(routeLayerGroup.getBounds(), { padding: [40, 40] });
         }
-
         // Cập nhật giao diện thông số hiệu năng kết quả
         // Linh hoạt hiển thị execution_time hoặc travel_time tùy cấu trúc API trả về
         const timeVal = result.execution_time !== undefined ? result.execution_time + " ms" : (result.travel_time ? result.travel_time + " phút" : "0 ms");
