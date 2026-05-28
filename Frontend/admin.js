@@ -255,7 +255,11 @@ async function fetchTargets(type) {
                 optionsArr.forEach(opt => targetSelect.add(opt));
 
                 if (targetSelect.options.length <= 1) {
+<<<<<<< HEAD
                     targetSelect.innerHTML = '<option value="">Bản đồ không có đoạn ray subway độc lập</option>';
+=======
+                    targetSelect.innerHTML = '<option value=""> Bản đồ không có đoạn ray subway độc lập</option>';
+>>>>>>> 71b85543e60e56fc773abae5e693c7ee5d1ba7a5
                 }
             }
             break;
