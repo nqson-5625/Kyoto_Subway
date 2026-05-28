@@ -327,6 +327,98 @@ if (searchBtn) {
         }
     });
 }
+// ==========================================
+// THÊM LAYER TÀU ĐIỆN NGẦM (SUBWAY) KÈM GA TÀU
+// ==========================================
+let subwayLayer = L.featureGroup();
+let isSubwayVisible = false;
+
+if (geoData && geoData.features) {
+    L.geoJSON(geoData, {
+        // 1. LỌC: Lấy các tuyến subway HOẶC các ga tàu liên quan đến subway
+        filter: (f) => {
+            const r = f.properties ? f.properties.railway : '';
+            const pt = f.properties ? f.properties.public_transport : '';
+            
+            // Nếu là đường ray tàu điện ngầm thì lấy
+            if (r === 'subway') return true;
+            
+            // Nếu là ga tàu, ta cần kiểm tra xem nó có thuộc tuyến Karasuma/Tozai không
+            if (r === 'station' || pt === 'station') {
+                const propStr = JSON.stringify(f.properties).toLowerCase();
+                // Chỉ lấy các ga có chữ subway, karasuma hoặc tozai trong thuộc tính
+                if (propStr.includes('subway') || propStr.includes('karasuma') || propStr.includes('tozai')) {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        // 2. HIỂN THỊ ĐIỂM (GA TÀU)
+        pointToLayer: (f, latlng) => {
+            const propStr = JSON.stringify(f.properties).toLowerCase();
+            let dotColor = '#ffffff';
+            let strokeColor = '#38bdf8'; // Màu mặc định
+
+            // Phân biệt màu viền ga theo tuyến
+            if (propStr.includes('karasuma')) {
+                strokeColor = '#4CAF50'; // Xanh lá
+            } else if (propStr.includes('tozai')) {
+                strokeColor = '#E60012'; // Đỏ
+            }
+
+            const stationName = f.properties.name || f.properties['name:en'] || 'Ga chưa rõ tên';
+
+            return L.circleMarker(latlng, {
+                radius: 5,
+                fillColor: dotColor,
+                color: strokeColor,
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 1
+            }).bindPopup(`<b>🚉 Ga: ${stationName}</b><br><span style="font-size:11px;color:#666;">Tuyến Tàu điện ngầm</span>`);
+        },
+
+        // 3. HIỂN THỊ ĐƯỜNG (TUYẾN TÀU)
+        style: (f) => {
+            // Bỏ qua việc xét style đường nét với các ga tàu (Point)
+            if (f.geometry && f.geometry.type === 'Point') return {};
+
+            // Ép toàn bộ properties thành chuỗi để tìm tên tuyến cho dễ và chính xác nhất
+            const propStr = JSON.stringify(f.properties).toLowerCase();
+            
+            let lineColor = '#38bdf8'; // Màu mặc định nếu không khớp
+            
+            if (propStr.includes('karasuma')) {
+                lineColor = '#4CAF50'; // Tuyến Karasuma - Xanh lá
+            } else if (propStr.includes('tozai')) {
+                lineColor = '#E60012'; // Tuyến Tozai - Đỏ
+            }
+
+            return { color: lineColor, weight: 5, opacity: 0.9 };
+        }
+    }).addTo(subwayLayer);
+}
+
+// Bắt sự kiện nhấn nút Ẩn/Hiện Tàu điện ngầm (Nếu bạn chưa thêm thì dùng đoạn này)
+const toggleSubwayBtn = document.getElementById('toggleSubwayBtn');
+if (toggleSubwayBtn) {
+    toggleSubwayBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (isSubwayVisible) {
+            map.removeLayer(subwayLayer);
+            toggleSubwayBtn.innerText = "Hiện hệ thống tàu";
+            isSubwayVisible = false;
+        } else {
+            subwayLayer.addTo(map);
+            toggleSubwayBtn.innerText = "Ẩn hệ thống tàu";
+            isSubwayVisible = true;
+            if (subwayLayer.getLayers().length > 0) {
+                map.fitBounds(subwayLayer.getBounds(), { padding: [40, 40] });
+            }
+        }
+    });
+}
 
 // Bắt sự kiện nhấn phím Enter trong ô tìm kiếm
 document.getElementById('searchInput').addEventListener('keypress', function (e) {
