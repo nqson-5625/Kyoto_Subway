@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bản đồ Tìm Đường Kyoto</title>
     
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
@@ -128,7 +127,6 @@
             transform: none;
         }
 
-        /* Thẻ kết quả hiệu năng */
         .perf-card { 
             background: #1a252f; 
             border: 1px solid var(--accent); 
@@ -156,7 +154,6 @@
             font-size: 15px; 
         }
 
-        /* Nhật ký sự cố hệ thống */
         #statusList {
             max-height: 120px;
             overflow-y: auto;
@@ -291,6 +288,13 @@
                 <div class="perf-item">Tổng chiều dài lộ trình: <span class="perf-value" id="stat-length">-- m</span></div>
             </div>
         </div>
+        <div class="control-group">
+    <label> Tìm kiếm địa điểm / Ga tàu</label>
+    <div style="display: flex; gap: 5px;">
+        <input type="text" id="searchInput" placeholder="Nhập tên đường, ga, địa điểm..." style="margin-bottom: 0;">
+        <button class="btn btn-primary" id="searchBtn" style="margin-top: 0; width: 60px; padding: 10px;">Tìm</button>
+    </div>
+</div>
 
         <!-- Trạng thái sự cố từ Backend -->
         <div class="control-group">
@@ -308,17 +312,9 @@
             <a href="admin.html" class="nav-link"> Chế độ Admin</a>
         </div>
     </div>
-
-    <!-- Container chứa thông báo Toast -->
     <div id="toast-container"></div>
-
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- File chứa dữ liệu bản đồ địa lý Offline (nếu có) -->
     <script src="mapData.js"></script> 
-
-    <!-- File Script logic tập trung chính -->
     <script src="app.js"></script>
 </body>
 </html>

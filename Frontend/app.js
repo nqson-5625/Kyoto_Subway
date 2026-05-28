@@ -39,7 +39,7 @@ function showToast(message, type = 'error') {
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    const icon = type === 'error' ? '❌' : (type === 'success' ? '✅' : '⚠️');
+    const icon = type === 'error' ? '' : (type === 'success' ? '' : '');
     
     toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
     container.appendChild(toast);
@@ -146,12 +146,18 @@ if (clearBtn) {
     clearBtn.addEventListener('click', () => {
         if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
         if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
+        if (typeof searchMarker !== 'undefined' && searchMarker) {
+            map.removeLayer(searchMarker);
+            searchMarker = null;
+        }
         routeLayerGroup.clearLayers();
         
         const startInput = document.getElementById('start-input');
         const endInput = document.getElementById('end-input');
+        const searchInput = document.getElementById('searchInput');
         if (startInput) startInput.value = "";
         if (endInput) endInput.value = "";
+        if (searchInput) searchInput.value = "";
         
         document.getElementById('stat-time').innerText = "-- ms";
         document.getElementById('stat-length').innerText = "-- m";
@@ -272,6 +278,60 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
     } finally {
         btn.innerText = "TÌM ĐƯỜNG ĐI TỐI ƯU";
         btn.disabled = false;
+    }
+});
+// ==========================================
+// 6. TÌM KIẾM ĐỊA CHỈ
+// ==========================================
+let searchMarker;
+
+const searchBtn = document.getElementById('searchBtn');
+if (searchBtn) {
+    searchBtn.addEventListener('click', async () => {
+        const query = document.getElementById('searchInput').value;
+        if (!query) {
+            showToast("Vui lòng nhập địa chỉ cần tìm!", "warning");
+            return;
+        }
+        
+        searchBtn.innerText = "...";
+        searchBtn.disabled = true;
+
+        try {
+            // Giới hạn tìm kiếm ưu tiên khu vực Kyoto (viewbox)
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&viewbox=135.5,35.2,136.0,34.8&bounded=0`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                
+                // Di chuyển bản đồ đến vị trí tìm thấy
+                map.setView([lat, lon], 15);
+                
+                // Đánh dấu marker tạm thời
+                if (searchMarker) map.removeLayer(searchMarker);
+                searchMarker = L.marker([lat, lon]).addTo(map)
+                    .bindPopup(`<b>Kết quả:</b> ${data[0].display_name}`).openPopup();
+                    
+                showToast("Đã tìm thấy địa điểm!", "success");
+            } else {
+                showToast("Không tìm thấy địa điểm này.", "error");
+            }
+        } catch (err) {
+            showToast("Lỗi kết nối máy chủ tìm kiếm.", "error");
+        } finally {
+            searchBtn.innerText = "Tìm";
+            searchBtn.disabled = false;
+        }
+    });
+}
+
+// Bắt sự kiện nhấn phím Enter trong ô tìm kiếm
+document.getElementById('searchInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        document.getElementById('searchBtn').click();
     }
 });
 
