@@ -1,25 +1,39 @@
 const API_BASE_URL = 'http://localhost:5000/api'; 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Khởi tạo bản đồ nền
+    // 1. Khởi tạo bản đồ nền
     const map = L.map('map-bg', { zoomControl: false, dragging: false, scrollWheelZoom: false }).setView([35.0116, 135.7681], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // Mặc định nạp danh sách Ga
+    // ==========================================
+    // [MỚI] VẼ DỮ LIỆU TỪ Mapdata.js LÊN BẢN ĐỒ
+    // ==========================================
+    if (typeof kyotoGeoData !== 'undefined') {
+        L.geoJSON(kyotoGeoData, {
+            style: { color: "#34495e", weight: 1, opacity: 0.3 }, // Vẽ viền mờ
+            pointToLayer: function (feature, latlng) {
+                // Nếu là ga tàu thì vẽ các chấm đỏ trên bản đồ nền
+                if (feature.properties && (feature.properties.railway === 'station' || feature.properties.public_transport === 'station')) {
+                    return L.circleMarker(latlng, { radius: 5, fillColor: "#e74c3c", color: "#fff", weight: 1, fillOpacity: 0.8 });
+                }
+                return L.circleMarker(latlng, { radius: 2, color: "#aaa" });
+            }
+        }).addTo(map);
+    }
+
+    // 2. Mặc định nạp danh sách Ga
     fetchTargets('station');
 
-    // Chuyển đổi danh sách đối tượng & Đổi màu khi thay đổi loại sự cố
+    // 3. Đổi màu chữ menu dropdown sự cố
     const eventTypeSelect = document.getElementById('eventType');
     eventTypeSelect.addEventListener('change', (e) => {
         fetchTargets(e.target.value);
-        
-        // Đổi màu chữ
         const colors = { 'station': '#3498db', 'line': '#e67e22', 'trip': '#9b59b6', 'edge': '#1abc9c' };
         eventTypeSelect.style.color = colors[eventTypeSelect.value] || 'white';
     });
     eventTypeSelect.dispatchEvent(new Event('change'));
 
-    // Đổi màu chữ khi thay đổi trạng thái
+    // 4. Đổi màu chữ trạng thái
     const eventStatusSelect = document.getElementById('eventStatus');
     eventStatusSelect.addEventListener('change', function() {
         const colors = { 'normal': '#2ecc71', 'warning': '#f1c40f', 'incident': '#e74c3c', 'maintenance': '#bdc3c7' };
@@ -27,24 +41,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     eventStatusSelect.dispatchEvent(new Event('change'));
 
-    // Lắng nghe nút Submit
+    // 5. Submit form
     document.getElementById('submitAdminBtn').addEventListener('click', postStatusEvent);
 });
 
 // =====================================================================
-// [NHẬN TỪ BACKEND]: Lấy danh sách đối tượng
+// LẤY DANH SÁCH ĐỐI TƯỢNG (TỪ MAPDATA HOẶC BACKEND)
 // =====================================================================
 async function fetchTargets(type) {
     const targetSelect = document.getElementById('targetList');
-    targetSelect.innerHTML = '<option>Đang đồng bộ...</option>';
+    targetSelect.innerHTML = '<option value="">Đang đồng bộ...</option>';
     
-    const endpoints = {
-        'station': '/stations',
-        'line': '/lines',
-        'trip': '/trips',
-        'edge': '/edge-status-events'
-    };
+    // [MỚI] NẾU LÀ 'station', LẤY TỪ FILE Mapdata.js THAY VÌ GỌI BACKEND
+    if (type === 'station' && typeof kyotoGeoData !== 'undefined') {
+        targetSelect.innerHTML = '<option value="">-- Chọn ga tàu --</option>';
+        
+        // Lọc bóc tách các Ga tàu từ đống GeoJSON
+        const stations = kyotoGeoData.features.filter(f => 
+            f.properties && (f.properties.railway === 'station' || f.properties.public_transport === 'station')
+        );
 
+        stations.forEach(station => {
+            const id = station.properties['@id'] || station.id;
+            const name = station.properties.name || station.properties['name:en'] || `Ga ID: ${id}`;
+            targetSelect.add(new Option(name, id));
+        });
+        return; // Xong việc thì dừng lại, không gọi xuống Backend nữa
+    }
+
+    // Nếu chọn Tuyến, Chuyến, Đoạn đường (không có trong file JS) thì vẫn gọi Backend
+    const endpoints = { 'line': '/lines', 'trip': '/trips', 'edge': '/edges' };
     try {
         const response = await fetch(`${API_BASE_URL}${endpoints[type]}`);
         if (!response.ok) throw new Error();
@@ -52,16 +78,15 @@ async function fetchTargets(type) {
         
         targetSelect.innerHTML = '';
         data.forEach(item => {
-            let option = new Option(item.name || `ID: ${item.id}`, item.id);
-            targetSelect.add(option);
+            targetSelect.add(new Option(item.name || `Mã ID: ${item.id}`, item.id));
         });
     } catch (err) {
-        targetSelect.innerHTML = '<option>Lỗi tải dữ liệu Backend</option>';
+        targetSelect.innerHTML = '<option value="">⚠️ Lỗi tải dữ liệu Backend</option>';
     }
 }
 
 // =====================================================================
-// [GỬI VỀ BACKEND]: Phát hành sự kiện mới
+// [GỬI VỀ BACKEND]: Phát hành sự kiện mới (POST)
 // =====================================================================
 async function postStatusEvent() {
     const type = document.getElementById('eventType').value;
@@ -69,7 +94,11 @@ async function postStatusEvent() {
     const status = document.getElementById('eventStatus').value;
     const msgDiv = document.getElementById('status-msg');
 
-    if (!targetId) return;
+    if (!targetId) {
+        msgDiv.innerText = " Vui lòng chọn đối tượng bị ảnh hưởng!";
+        msgDiv.style.color = "#f1c40f";
+        return;
+    }
 
     msgDiv.innerText = " Đang truyền tín hiệu tới server...";
     msgDiv.style.color = "#3498db";
