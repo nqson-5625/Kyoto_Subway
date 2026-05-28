@@ -59,7 +59,7 @@ if (geoData && geoData.features) {
                 weight: 2,
                 opacity: 1,
                 fillOpacity: 1
-            }).bindPopup(`<b>🚉 Ga: ${stationNameEN}</b><br><span style="font-size:11px;color:#666;">Tuyến Tàu điện ngầm</span>`);
+            }).bindPopup(`<b> Ga: ${stationNameEN}</b><br><span style="font-size:11px;color:#666;">Tuyến Tàu điện ngầm</span>`);
         },
         style: (f) => {
             if (f.geometry && f.geometry.type === 'Point') return {};
@@ -332,7 +332,7 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
                             weight: 2,
                             opacity: 1,
                             fillOpacity: 1
-                        }).bindPopup(`<b>🚉 Ga: ${stationNameEN}</b><br><span style="font-size:11px;color:#666;">Mode: ${segment.mode.toUpperCase()}</span>`)
+                        }).bindPopup(`<b> Ga: ${stationNameEN}</b><br><span style="font-size:11px;color:#666;">Mode: ${segment.mode.toUpperCase()}</span>`)
                           .addTo(routeLayerGroup);
                     });
                 }
