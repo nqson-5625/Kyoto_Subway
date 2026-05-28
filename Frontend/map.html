@@ -247,11 +247,9 @@
 </head>
 <body>
 
-    <!-- SIDEBAR ĐIỀU KHIỂN -->
     <div id="sidebar">
         <h2>Hệ Thống Tìm Đường Kyoto</h2>
 
-        <!-- Chọn điểm -->
         <div class="control-group">
             <label>1. Chọn vị trí trên bản đồ</label>
             <input type="text" id="start-input" placeholder="Click bản đồ chọn điểm xuất phát..." readonly>
@@ -259,7 +257,6 @@
             <button class="btn btn-warning" id="clearBtn">✖ Hủy các điểm đã chọn</button>
         </div>
 
-        <!-- Cấu hình kịch bản mô phỏng từ Backend -->
         <div class="control-group">
             <label>2. Sự cố </label>
             <input type="date" id="serviceDate">
@@ -268,7 +265,6 @@
             </select>
         </div>
 
-        <!-- Thuật toán -->
         <div class="control-group">
             <label>3. Thuật toán tìm kiếm</label>
             <select id="algoSelect">
@@ -280,7 +276,6 @@
             <button class="btn btn-primary" id="findPathBtn">Tìm đường đi tối ưu</button>
         </div>
 
-        <!-- Khung hiển thị hiệu năng tính toán -->
         <div class="control-group" id="perf-section" style="display: none;">
             <label>Kết quả phân tích thuật toán</label>
             <div class="perf-card">
@@ -288,17 +283,16 @@
                 <div class="perf-item">Tổng chiều dài lộ trình: <span class="perf-value" id="stat-length">-- m</span></div>
             </div>
         </div>
+        
         <div class="control-group">
-    <label> Tìm kiếm địa điểm / Ga tàu</label>
-    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-        <input type="text" id="searchInput" placeholder="Nhập tên đường, ga, địa điểm..." style="margin-bottom: 0;">
-        <button class="btn btn-primary" id="searchBtn" style="margin-top: 0; width: 60px; padding: 10px;">Tìm</button>
-    </div>
-    <button id="toggleSubwayBtn" class="btn" style="background-color: #8e44ad; color: white;">Hiện hệ thống tàu</button>
-</div>
-</div>
+            <label>Tìm kiếm địa điểm / Ga tàu</label>
+            <div style="display: flex; gap: 5px; margin-bottom: 8px;">
+                <input type="text" id="searchInput" placeholder="Nhập tên đường, ga, địa điểm..." style="margin-bottom: 0;">
+                <button class="btn btn-primary" id="searchBtn" style="margin-top: 0; width: 60px; padding: 10px;">Tìm</button>
+            </div>
+            <button id="toggleSubwayBtn" class="btn" style="background: #34495e; color: white; border: 1px solid var(--accent);">Hiện hệ thống tàu</button>
+        </div>
 
-        <!-- Trạng thái sự cố từ Backend -->
         <div class="control-group">
             <label>Nhật ký sự cố thời gian thực</label>
             <div id="statusList">
@@ -307,11 +301,10 @@
         </div>
     </div>
 
-    <!-- KHU VỰC BẢN ĐỒ -->
     <div id="map">
         <div class="top-nav-links">
-    <a href="admin.html" class="nav-link"> Chế độ Admin</a>
-</div>
+            <a href="admin.html" class="nav-link"> Chế độ Admin</a>
+        </div>
     </div>
     <div id="toast-container"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

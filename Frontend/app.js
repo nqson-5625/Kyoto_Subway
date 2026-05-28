@@ -27,6 +27,71 @@ if (geoData && geoData.features) {
     }).addTo(map);
 }
 
+// KHỞI TẠO LAYER TÀU ĐIỆN NGẦM ẨN/HIỆN (TĨNH) KHỚP MÀU & TIẾNG ANH
+let subwayLayer = L.featureGroup();
+let isSubwayVisible = false;
+
+if (geoData && geoData.features) {
+    L.geoJSON(geoData, {
+        filter: (f) => {
+            const r = f.properties ? f.properties.railway : '';
+            const pt = f.properties ? f.properties.public_transport : '';
+            if (r === 'subway') return true;
+            if (r === 'station' || pt === 'station') {
+                const propStr = JSON.stringify(f.properties).toLowerCase();
+                if (propStr.includes('subway') || propStr.includes('karasuma') || propStr.includes('tozai')) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        pointToLayer: (f, latlng) => {
+            const propStr = JSON.stringify(f.properties).toLowerCase();
+            let strokeColor = '#38bdf8';
+            if (propStr.includes('karasuma')) strokeColor = '#4CAF50';
+            else if (propStr.includes('tozai')) strokeColor = '#E60012';
+
+            const stationNameEN = f.properties['name:en'] || f.properties.name_en || f.properties.name || 'Unknown Station';
+            return L.circleMarker(latlng, {
+                radius: 5,
+                fillColor: '#ffffff',
+                color: strokeColor,
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 1
+            }).bindPopup(`<b>🚉 Ga: ${stationNameEN}</b><br><span style="font-size:11px;color:#666;">Tuyến Tàu điện ngầm</span>`);
+        },
+        style: (f) => {
+            if (f.geometry && f.geometry.type === 'Point') return {};
+            const propStr = JSON.stringify(f.properties).toLowerCase();
+            let lineColor = '#38bdf8';
+            if (propStr.includes('karasuma')) lineColor = '#4CAF50';
+            else if (propStr.includes('tozai')) lineColor = '#E60012';
+            return { color: lineColor, weight: 5, opacity: 0.9 };
+        }
+    }).addTo(subwayLayer);
+}
+
+// Bắt sự kiện nhấn nút Ẩn/Hiện Tàu điện ngầm trong Sidebar
+const toggleSubwayBtn = document.getElementById('toggleSubwayBtn');
+if (toggleSubwayBtn) {
+    toggleSubwayBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (isSubwayVisible) {
+            map.removeLayer(subwayLayer);
+            toggleSubwayBtn.innerText = "Hiện hệ thống tàu";
+            isSubwayVisible = false;
+        } else {
+            subwayLayer.addTo(map);
+            toggleSubwayBtn.innerText = "Ẩn hệ thống tàu";
+            isSubwayVisible = true;
+            if (subwayLayer.getLayers().length > 0) {
+                map.fitBounds(subwayLayer.getBounds(), { padding: [40, 40] });
+            }
+        }
+    });
+}
+
 // ==========================================
 // 2. HỆ THỐNG THÔNG BÁO (TOAST NOTIFICATION)
 // ==========================================
@@ -39,9 +104,8 @@ function showToast(message, type = 'error') {
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    const icon = type === 'error' ? '' : (type === 'success' ? '' : '');
     
-    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+    toast.innerHTML = `<span></span> <span>${message}</span>`;
     container.appendChild(toast);
 
     setTimeout(() => {
@@ -55,7 +119,6 @@ function showToast(message, type = 'error') {
 // 3. KHỞI TẠO DASHBOARD & STATUS EVENTS (BACKEND)
 // ==========================================
 async function initDashboard() {
-    // Đặt ngày mặc định là hôm nay
     const dateInput = document.getElementById('serviceDate');
     if (dateInput && !dateInput.value) {
         dateInput.value = new Date().toISOString().split('T')[0];
@@ -116,7 +179,6 @@ map.on('click', (e) => {
         const startInput = document.getElementById('start-input');
         if (startInput) startInput.value = `Lat: ${latlng.lat.toFixed(4)}, Lng: ${latlng.lng.toFixed(4)}`;
         
-        // Thêm sự kiện kéo marker cập nhật tọa độ
         startMarker.on('dragend', function() {
             const pos = startMarker.getLatLng();
             if (startInput) startInput.value = `Lat: ${pos.lat.toFixed(4)}, Lng: ${pos.lng.toFixed(4)}`;
@@ -130,7 +192,6 @@ map.on('click', (e) => {
         const endInput = document.getElementById('end-input');
         if (endInput) endInput.value = `Lat: ${latlng.lat.toFixed(4)}, Lng: ${latlng.lng.toFixed(4)}`;
         
-        // Thêm sự kiện kéo marker cập nhật tọa độ
         endMarker.on('dragend', function() {
             const pos = endMarker.getLatLng();
             if (endInput) endInput.value = `Lat: ${pos.lat.toFixed(4)}, Lng: ${pos.lng.toFixed(4)}`;
@@ -140,7 +201,6 @@ map.on('click', (e) => {
     }
 });
 
-// Xử lý nút Hủy điểm đã chọn
 const clearBtn = document.getElementById('clearBtn');
 if (clearBtn) {
     clearBtn.addEventListener('click', () => {
@@ -181,7 +241,6 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
     btn.innerText = "ĐANG TÍNH TOÁN...";
     btn.disabled = true;
 
-    // Hiển thị khung kết quả chờ
     document.getElementById('perf-section').style.display = 'block';
     document.getElementById('stat-time').innerText = "...";
     document.getElementById('stat-length').innerText = "...";
@@ -218,77 +277,72 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
 
         routeLayerGroup.clearLayers();
 
-        // 1. Vẽ các đoạn đường đi (Segments)
+        // 1. Vẽ các đoạn đường đi (Segments) kết hợp đồng bộ màu sắc 2 Subway
         if (result.segments) {
             result.segments.forEach(segment => {
                 let isTrainRoute = ['subway', 'metro', 'rail', 'light_rail'].includes(segment.mode);
                 let polylineStyle;
                 
                 if (isTrainRoute) {
-                    let strokeColor = '#fb923c';
+                    let strokeColor = '#fb923c'; 
                     
                     if (segment.mode === 'subway') {
-                        // Ép chuỗi dữ liệu đoạn đường để kiểm tra tên tuyến Karasuma hay Tozai
                         const segmentStr = JSON.stringify(segment).toLowerCase();
-                        
                         if (segmentStr.includes('karasuma')) {
-                            strokeColor = '#4CAF50'; // Tuyến Karasuma - Xanh lá
+                            strokeColor = '#4CAF50'; // Karasuma - Xanh lá
                         } else if (segmentStr.includes('tozai')) {
-                            strokeColor = '#E60012'; // Tuyến Tozai - Đỏ
+                            strokeColor = '#E60012'; // Tozai - Đỏ
                         } else {
                             strokeColor = '#38bdf8';
                         }
                     }
-                    
                     polylineStyle = { color: strokeColor, weight: 6, opacity: 0.9 };
                 } else {
-                    // Đi bộ hoặc phương thức khác: Nét đứt màu xanh lá cây
                     polylineStyle = { color: '#2ecc71', weight: 4, dashArray: '8, 8', opacity: 0.8 };
                 }
 
                 L.polyline(segment.coordinates, polylineStyle).addTo(routeLayerGroup);
 
-                // 2. Điểm các nhà ga dọc tuyến nếu có
+                // 2. Điểm các nhà ga dọc tuyến khớp màu viền
                 if (segment.stations && segment.stations.length > 0) {
                     segment.stations.forEach(station => {
-                        let markerColor = "#1e293b"; 
+                        let markerColor = "#1e293b";
                         
                         if (segment.mode === 'subway') {
-                            // Ép chuỗi thông tin ga hoặc đoạn tuyến để đổi màu viền ga tương ứng
                             const stationStr = JSON.stringify(station).toLowerCase();
                             const segmentStr = JSON.stringify(segment).toLowerCase();
-                            
                             if (stationStr.includes('karasuma') || segmentStr.includes('karasuma')) {
-                                markerColor = '#4CAF50'; // Viền ga xanh lá
+                                markerColor = '#4CAF50';
                             } else if (stationStr.includes('tozai') || segmentStr.includes('tozai')) {
-                                markerColor = '#E60012'; // Viền ga đỏ
+                                markerColor = '#E60012';
                             } else {
-                                markerColor = '#38bdf8'; // Viền ga mặc định
+                                markerColor = '#38bdf8';
                             }
                         } else if (!isTrainRoute) {
-                            markerColor = "#2ecc71"; // Đi bộ
+                            markerColor = "#2ecc71";
                         }
+
+                        // Ưu tiên lấy tiếng Anh
+                        let stationNameEN = station.name_en || station['name:en'] || station.name || 'Unknown Station';
 
                         L.circleMarker([station.lat, station.lng], {
                             radius: 5,
                             fillColor: "#fff",
-                            color: markerColor, // Đã đồng bộ màu viền ga
+                            color: markerColor,
                             weight: 2,
                             opacity: 1,
                             fillOpacity: 1
-                        }).bindPopup(`<b>🚉 Ga: ${station.name}</b><br><span style="font-size:11px;color:#666;">Mode: ${segment.mode.toUpperCase()}</span>`)
+                        }).bindPopup(`<b>🚉 Ga: ${stationNameEN}</b><br><span style="font-size:11px;color:#666;">Mode: ${segment.mode.toUpperCase()}</span>`)
                           .addTo(routeLayerGroup);
                     });
                 }
             });
         }
 
-        // Tự động căn góc bản đồ vừa vặn với toàn bộ lộ trình đường đi
         if (routeLayerGroup.getLayers().length > 0) {
             map.fitBounds(routeLayerGroup.getBounds(), { padding: [40, 40] });
         }
-        // Cập nhật giao diện thông số hiệu năng kết quả
-        // Linh hoạt hiển thị execution_time hoặc travel_time tùy cấu trúc API trả về
+
         const timeVal = result.execution_time !== undefined ? result.execution_time + " ms" : (result.travel_time ? result.travel_time + " phút" : "0 ms");
         const distVal = result.total_distance !== undefined ? result.total_distance + " m" : (result.distance ? result.distance + " m" : "0 m");
 
@@ -310,6 +364,7 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
         btn.disabled = false;
     }
 });
+
 // ==========================================
 // 6. TÌM KIẾM ĐỊA CHỈ
 // ==========================================
@@ -328,7 +383,6 @@ if (searchBtn) {
         searchBtn.disabled = true;
 
         try {
-            // Giới hạn tìm kiếm ưu tiên khu vực Kyoto (viewbox)
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&viewbox=135.5,35.2,136.0,34.8&bounded=0`;
             const res = await fetch(url);
             const data = await res.json();
@@ -337,10 +391,8 @@ if (searchBtn) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
                 
-                // Di chuyển bản đồ đến vị trí tìm thấy
                 map.setView([lat, lon], 15);
                 
-                // Đánh dấu marker tạm thời
                 if (searchMarker) map.removeLayer(searchMarker);
                 searchMarker = L.marker([lat, lon]).addTo(map)
                     .bindPopup(`<b>Kết quả:</b> ${data[0].display_name}`).openPopup();
@@ -357,100 +409,7 @@ if (searchBtn) {
         }
     });
 }
-// ==========================================
-// THÊM LAYER TÀU ĐIỆN NGẦM (SUBWAY) KÈM GA TÀU
-// ==========================================
-let subwayLayer = L.featureGroup();
-let isSubwayVisible = false;
 
-if (geoData && geoData.features) {
-    L.geoJSON(geoData, {
-        // 1. LỌC: Lấy các tuyến subway HOẶC các ga tàu liên quan đến subway
-        filter: (f) => {
-            const r = f.properties ? f.properties.railway : '';
-            const pt = f.properties ? f.properties.public_transport : '';
-            
-            // Nếu là đường ray tàu điện ngầm thì lấy
-            if (r === 'subway') return true;
-            
-            // Nếu là ga tàu, ta cần kiểm tra xem nó có thuộc tuyến Karasuma/Tozai không
-            if (r === 'station' || pt === 'station') {
-                const propStr = JSON.stringify(f.properties).toLowerCase();
-                // Chỉ lấy các ga có chữ subway, karasuma hoặc tozai trong thuộc tính
-                if (propStr.includes('subway') || propStr.includes('karasuma') || propStr.includes('tozai')) {
-                    return true;
-                }
-            }
-            return false;
-        },
-
-        // 2. HIỂN THỊ ĐIỂM (GA TÀU)
-        pointToLayer: (f, latlng) => {
-            const propStr = JSON.stringify(f.properties).toLowerCase();
-            let dotColor = '#ffffff';
-            let strokeColor = '#38bdf8'; // Màu mặc định
-
-            // Phân biệt màu viền ga theo tuyến
-            if (propStr.includes('karasuma')) {
-                strokeColor = '#4CAF50'; // Xanh lá
-            } else if (propStr.includes('tozai')) {
-                strokeColor = '#E60012'; // Đỏ
-            }
-
-            const stationName = f.properties.name || f.properties['name:en'] || 'Ga chưa rõ tên';
-
-            return L.circleMarker(latlng, {
-                radius: 5,
-                fillColor: dotColor,
-                color: strokeColor,
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 1
-            }).bindPopup(`<b>🚉 Ga: ${stationName}</b><br><span style="font-size:11px;color:#666;">Tuyến Tàu điện ngầm</span>`);
-        },
-
-        // 3. HIỂN THỊ ĐƯỜNG (TUYẾN TÀU)
-        style: (f) => {
-            // Bỏ qua việc xét style đường nét với các ga tàu (Point)
-            if (f.geometry && f.geometry.type === 'Point') return {};
-
-            // Ép toàn bộ properties thành chuỗi để tìm tên tuyến cho dễ và chính xác nhất
-            const propStr = JSON.stringify(f.properties).toLowerCase();
-            
-            let lineColor = '#38bdf8'; // Màu mặc định nếu không khớp
-            
-            if (propStr.includes('karasuma')) {
-                lineColor = '#4CAF50'; // Tuyến Karasuma - Xanh lá
-            } else if (propStr.includes('tozai')) {
-                lineColor = '#E60012'; // Tuyến Tozai - Đỏ
-            }
-
-            return { color: lineColor, weight: 5, opacity: 0.9 };
-        }
-    }).addTo(subwayLayer);
-}
-
-// Bắt sự kiện nhấn nút Ẩn/Hiện Tàu điện ngầm (Nếu bạn chưa thêm thì dùng đoạn này)
-const toggleSubwayBtn = document.getElementById('toggleSubwayBtn');
-if (toggleSubwayBtn) {
-    toggleSubwayBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (isSubwayVisible) {
-            map.removeLayer(subwayLayer);
-            toggleSubwayBtn.innerText = "Hiện hệ thống tàu";
-            isSubwayVisible = false;
-        } else {
-            subwayLayer.addTo(map);
-            toggleSubwayBtn.innerText = "Ẩn hệ thống tàu";
-            isSubwayVisible = true;
-            if (subwayLayer.getLayers().length > 0) {
-                map.fitBounds(subwayLayer.getBounds(), { padding: [40, 40] });
-            }
-        }
-    });
-}
-
-// Bắt sự kiện nhấn phím Enter trong ô tìm kiếm
 document.getElementById('searchInput').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         document.getElementById('searchBtn').click();
