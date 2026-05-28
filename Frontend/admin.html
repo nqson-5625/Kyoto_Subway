@@ -30,6 +30,17 @@
         select:focus, input:focus { border-color: #3498db; background: rgba(0, 0, 0, 0.6); }
         option { background: #1e272e; color: white; }
 
+        /* [MỚI] TỰ ĐỘNG TÔ MÀU CHO CÁC OPTIONS KHI XỔ XUỐNG */
+        #eventType option[value="station"] { color: #3498db; font-weight: bold; }
+        #eventType option[value="line"] { color: #e67e22; font-weight: bold; }
+        #eventType option[value="trip"] { color: #9b59b6; font-weight: bold; }
+        #eventType option[value="edge"] { color: #1abc9c; font-weight: bold; }
+
+        #eventStatus option[value="normal"] { color: #2ecc71; font-weight: bold; }
+        #eventStatus option[value="warning"] { color: #f1c40f; font-weight: bold; }
+        #eventStatus option[value="incident"] { color: #e74c3c; font-weight: bold; }
+        #eventStatus option[value="maintenance"] { color: #bdc3c7; font-weight: bold; }
+
         .btn {
             width: 100%; padding: 15px; border: none; border-radius: 12px;
             font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.4s;
@@ -44,6 +55,7 @@
         .btn-back {
             background: rgba(255, 255, 255, 0.05); color: #ccc; text-decoration: none;
             display: block; text-align: center; border: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 45px;
         }
         .btn-back:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
@@ -90,6 +102,9 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="Mapdata.js"></script> 
+    
     <script src="admin.js"></script>
 </body>
 </html>
