@@ -30,7 +30,6 @@
         select:focus, input:focus { border-color: #3498db; background: rgba(0, 0, 0, 0.6); }
         option { background: #1e272e; color: white; }
 
-        /* Tự động tô màu cho các options khi xổ xuống */
         #eventType option[value="station"] { color: #3498db; font-weight: bold; }
         #eventType option[value="line"] { color: #e67e22; font-weight: bold; }
         #eventType option[value="trip"] { color: #9b59b6; font-weight: bold; }
@@ -81,7 +80,7 @@
         <div class="form-group">
             <label>Đối tượng bị ảnh hưởng (Target ID)</label>
             <select id="targetList">
-                <option value="">Đang tải dữ liệu...</option>
+                <option value="">Đang phân tích dữ liệu...</option>
             </select>
         </div>
 
@@ -89,8 +88,8 @@
             <label>Trạng thái cập nhật</label>
             <select id="eventStatus">
                 <option value="normal"> Hoạt động bình thường</option>
-                <option value="warning"> Cảnh báo / Quá tải</option>
-                <option value="incident"> Sự cố / Tạm dừng</option>
+                <option value="warning">Cảnh báo / Quá tải</option>
+                <option value="incident">Sự cố / Tạm dừng</option>
                 <option value="maintenance"> Đang bảo trì</option>
             </select>
         </div>
@@ -102,7 +101,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="mapdata.js"></script> 
+    <script src="Mapdata.js"></script> 
     <script src="admin.js"></script>
 </body>
 </html>
