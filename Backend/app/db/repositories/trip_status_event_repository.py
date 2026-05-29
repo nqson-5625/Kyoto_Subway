@@ -1,4 +1,4 @@
-from app.db.models.network import TripStatusEvent
+from app.db.models.status import TripStatusEvent
 
 
 class TripStatusEventRepository:

@@ -85,20 +85,17 @@ class Trip(Base):
     origin_station: Mapped[Optional["Station"]] = relationship(back_populates="origin_trips", foreign_keys=[origin_station_id])
     destination_station: Mapped[Optional["Station"]] = relationship(back_populates="destination_trips", foreign_keys=[destination_station_id])
     origin_station_line: Mapped[Optional["StationLine"]] = relationship(
+        "StationLine",
         back_populates="origin_trips",
-        primaryjoin=lambda: and_(
-            foreign(Trip.origin_station_id) == StationLine.station_id,
-            foreign(Trip.line_id) == StationLine.line_id,
-        ),
-        foreign_keys=lambda: [Trip.origin_station_id, Trip.line_id],
+        primaryjoin="and_(foreign(Trip.origin_station_id) == StationLine.station_id, foreign(Trip.line_id) == StationLine.line_id)",
+        foreign_keys="[Trip.origin_station_id, Trip.line_id]"
     )
+    
     destination_station_line: Mapped[Optional["StationLine"]] = relationship(
+        "StationLine",
         back_populates="destination_trips",
-        primaryjoin=lambda: and_(
-            foreign(Trip.destination_station_id) == StationLine.station_id,
-            foreign(Trip.line_id) == StationLine.line_id,
-        ),
-        foreign_keys=lambda: [Trip.destination_station_id, Trip.line_id],
+        primaryjoin="and_(foreign(Trip.destination_station_id) == StationLine.station_id, foreign(Trip.line_id) == StationLine.line_id)",
+        foreign_keys="[Trip.destination_station_id, Trip.line_id]"
     )
     timetable_entries: Mapped[list["Timetable"]] = relationship(back_populates="trip", cascade="all, delete-orphan")
     trip_status_events: Mapped[list["TripStatusEvent"]] = relationship(back_populates="trip")

@@ -1,4 +1,4 @@
-from app.db.models.network import StationStatusEvent
+from app.db.models.status import StationStatusEvent
 
 
 class StationStatusEventRepository:

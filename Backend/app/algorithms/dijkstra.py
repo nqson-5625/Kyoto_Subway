@@ -2,55 +2,40 @@ import heapq
 import itertools
 from datetime import datetime, timedelta
 from typing import List, Tuple, Optional, Any
-from .graph_builder import TransitGraph, RideEdge, TransferEdge
 
 def time_dependent_dijkstra(
-    graph: TransitGraph,
+    graph,
     start_station_id: str,
     end_station_id: str,
     start_time: datetime
 ) -> Tuple[Optional[List[Any]], float]:
     """
-    Tìm đường ngắn nhất phụ thuộc vào thời gian.
-    Trả về (List các Segments (RideEdge/TransferEdge), tổng thời gian di chuyển (giây)).
+    Tìm đường ngắn nhất phụ thuộc vào thời gian (đã cộng dồn delay).
     """
-    # Hàng đợi ưu tiên: (current_time, current_station_id, path_so_far)
-    # Lưu ý: Trong production, để tránh memory overhead, ta thường lưu mảng 'parent_pointers'
-    # thay vì lưu mảng 'path_so_far' thẳng vào queue. Ở đây dùng path mảng để dễ theo dõi logic.
-    counter = itertools.count() # Tiebreaker để tránh lỗi so sánh khi 2 path có cùng cost
+    counter = itertools.count() 
+    # Hàng đợi: (thời_gian_đến, id_thứ_tự, ga_hiện_tại, đường_đi_tích_lũy)
     pq = [(start_time, next(counter), start_station_id, [])]
     
-    # Earliest Arrival Time (EAT) - Thời gian đến sớm nhất tại mỗi ga
+    # EAT: Earliest Arrival Time
     earliest_arrival = {start_station_id: start_time}
     
     while pq:
         curr_time, _, curr_station, path = heapq.heappop(pq)
         
-        # Nếu đã đến đích, kết thúc
+        # Nếu đã đến đích, trả về lộ trình và tổng thời gian (giây)
         if curr_station == end_station_id:
             return path, (curr_time - start_time).total_seconds()
         
-        # Nếu node này đã được thăm với thời gian tốt hơn từ một đường khác, bỏ qua
+        # Bỏ qua nếu có đường khác đến ga này sớm hơn
         if curr_time > earliest_arrival.get(curr_station, datetime.max):
             continue
             
-        # 1. Xét các kết nối đi bộ (Transfers)
-        for transfer in graph.transfers.get(curr_station, []):
-            arr_time = curr_time + timedelta(seconds=transfer.travel_seconds)
-            if arr_time < earliest_arrival.get(transfer.to_station, datetime.max):
-                earliest_arrival[transfer.to_station] = arr_time
-                heapq.heappush(pq, (arr_time, next(counter), transfer.to_station, path + [transfer]))
-        
-        # 2. Xét các kết nối tàu (Rides)
-        seen_lines = set()
-        for ride in graph.rides.get(curr_station, []):
-            if ride.departure_at >= curr_time:
-                line_dir_key = (ride.line_id, ride.direction_id)
-                # Chỉ thử chuyến tàu sớm nhất của mỗi (tuyến + hướng) để giảm không gian duyệt
-                if line_dir_key not in seen_lines:
-                    seen_lines.add(line_dir_key)
-                    if ride.arrival_at < earliest_arrival.get(ride.to_station, datetime.max):
-                        earliest_arrival[ride.to_station] = ride.arrival_at
-                        heapq.heappush(pq, (ride.arrival_at, next(counter), ride.to_station, path + [ride]))
-                        
+        # Duyệt qua TẤT CẢ các cạnh (cả đi bộ lẫn đi tàu) từ ga hiện tại
+        for edge in graph.adj.get(curr_station, []):
+            arr_time = curr_time + timedelta(seconds=edge.travel_seconds)
+            
+            if arr_time < earliest_arrival.get(edge.to_station, datetime.max):
+                earliest_arrival[edge.to_station] = arr_time
+                heapq.heappush(pq, (arr_time, next(counter), edge.to_station, path + [edge]))
+                
     return None, 0.0 # Không tìm thấy đường

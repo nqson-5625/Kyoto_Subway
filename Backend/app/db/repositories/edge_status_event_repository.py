@@ -1,4 +1,4 @@
-from app.db.models.network import EdgeStatusEvent
+from app.db.models.status import EdgeStatusEvent
 
 
 class EdgeStatusEventRepository:

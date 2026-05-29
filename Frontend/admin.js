@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:5000/api/v1'; 
+const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
 
 const fallbackStations = [
     { id: "node/karasuma_kyoto", name: "Kyoto Station [Karasuma Line]" },
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (hasMapData) {
         L.geoJSON(kyotoGeoData, {
-            style: { color: "#34495e", weight: 1, opacity: 0.3 }, 
+            style: { color: "#34495e", weight: 1, opacity: 0.3 },
             pointToLayer: function (feature, latlng) {
                 if (feature.properties && (feature.properties.railway === 'station' || feature.properties.public_transport === 'station')) {
                     return L.circleMarker(latlng, { radius: 5, fillColor: "#e74c3c", color: "#fff", weight: 1, fillOpacity: 0.8 });
@@ -87,15 +87,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const eventTypeSelect = document.getElementById('eventType');
     eventTypeSelect.addEventListener('change', (e) => {
-        highlightLayer.clearLayers(); 
+        highlightLayer.clearLayers();
         fetchTargets(e.target.value);
-        
+
         const colors = { 'station': '#3498db', 'line': '#e67e22', 'trip': '#9b59b6', 'edge': '#1abc9c' };
         eventTypeSelect.style.color = colors[e.target.value] || 'white';
     });
 
     const eventStatusSelect = document.getElementById('eventStatus');
-    eventStatusSelect.addEventListener('change', function() {
+    eventStatusSelect.addEventListener('change', function () {
         const colors = { 'normal': '#2ecc71', 'warning': '#f1c40f', 'incident': '#e74c3c', 'maintenance': '#bdc3c7' };
         this.style.color = colors[this.value] || 'white';
     });
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = document.getElementById('eventType').value;
         const targetId = e.target.value;
 
-        highlightLayer.clearLayers(); 
+        highlightLayer.clearLayers();
 
         if (!targetId || !hasMapData) return;
 
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }).addTo(highlightLayer);
             }
-        } 
+        }
         else if (type === 'line') {
             const lineFeatures = kyotoGeoData.features.filter(f => {
                 if (f.geometry && (f.geometry.type === 'LineString' || f.geometry.type === 'MultiLineString') && f.properties) {
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (lineFeatures.length > 0) {
                 L.geoJSON(lineFeatures, { style: { color: "#f1c40f", weight: 6, opacity: 1 } }).addTo(highlightLayer);
             }
-        } 
+        }
         else if (type === 'edge') {
             const selectedOptionText = targetListSelect.options[targetListSelect.selectedIndex].text;
             const stationsList = getSubwayStations();
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function fetchTargets(type) {
     const targetSelect = document.getElementById('targetList');
     targetSelect.innerHTML = '<option value="">Đang bóc tách dữ liệu...</option>';
-    
+
     const hasMapData = (typeof kyotoGeoData !== 'undefined' && kyotoGeoData.features);
 
     switch (type) {
@@ -252,7 +252,7 @@ async function fetchTargets(type) {
             targetSelect.innerHTML = '<option value="">-- Chọn đoạn ray điện ngầm --</option>';
             if (hasMapData) {
                 const stationsList = getSubwayStations();
-                const addedEdgeNames = new Set(); 
+                const addedEdgeNames = new Set();
 
                 kyotoGeoData.features.forEach(f => {
                     if (f.geometry && (f.geometry.type === 'LineString' || f.geometry.type === 'MultiLineString') && f.properties && f.properties.railway === 'subway') {
@@ -268,7 +268,7 @@ async function fetchTargets(type) {
                         if (coords && coords.length >= 2) {
                             const startPoint = coords[0];
                             const endPoint = coords[coords.length - 1];
-                            
+
                             const stationA = getNearestStation(startPoint[0], startPoint[1], stationsList);
                             const stationB = getNearestStation(endPoint[0], endPoint[1], stationsList);
 
@@ -276,7 +276,7 @@ async function fetchTargets(type) {
                             const id = f.properties['@id'] || f.id || `edge_${Math.random()}`;
 
                             if (!addedEdgeNames.has(edgeName)) {
-                                targetSelect.add(new Option(edgeName, id)); 
+                                targetSelect.add(new Option(edgeName, id));
                                 addedEdgeNames.add(edgeName);
                             }
                         }
@@ -329,8 +329,8 @@ async function postStatusEvent() {
                 timestamp: new Date().toISOString()
             })
         });
-        
-        if(response.ok || response.status === 201) {
+
+        if (response.ok || response.status === 201) {
             msgDiv.innerText = " Cập nhật hệ thống thành công!";
             msgDiv.style.color = "#2ecc71";
         } else {

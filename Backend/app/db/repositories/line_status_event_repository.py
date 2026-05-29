@@ -1,4 +1,4 @@
-from app.db.models.network import LineStatusEvent
+from app.db.models.status import LineStatusEvent
 
 
 class LineStatusEventRepository:

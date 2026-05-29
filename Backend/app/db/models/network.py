@@ -106,37 +106,27 @@ class StationLine(Base):
     timetable_entries: Mapped[list["Timetable"]] = relationship(back_populates="station_line")
     outgoing_edges: Mapped[list["Edge"]] = relationship(
         back_populates="from_station_line",
-        primaryjoin=lambda: and_(
-            StationLine.line_id == foreign(Edge.line_id),
-            StationLine.station_order == foreign(Edge.from_station_order),
-            StationLine.station_id == foreign(Edge.from_station_id),
-        ),
-        foreign_keys=lambda: [Edge.line_id, Edge.from_station_order, Edge.from_station_id],
+        primaryjoin="and_(StationLine.line_id == foreign(Edge.line_id), StationLine.station_order == foreign(Edge.from_station_order), StationLine.station_id == foreign(Edge.from_station_id))",
+        foreign_keys="[Edge.line_id, Edge.from_station_order, Edge.from_station_id]",
+        overlaps="edges"
     )
     incoming_edges: Mapped[list["Edge"]] = relationship(
         back_populates="to_station_line",
-        primaryjoin=lambda: and_(
-            StationLine.line_id == foreign(Edge.line_id),
-            StationLine.station_order == foreign(Edge.to_station_order),
-            StationLine.station_id == foreign(Edge.to_station_id),
-        ),
-        foreign_keys=lambda: [Edge.line_id, Edge.to_station_order, Edge.to_station_id],
+        primaryjoin="and_(StationLine.line_id == foreign(Edge.line_id), StationLine.station_order == foreign(Edge.to_station_order), StationLine.station_id == foreign(Edge.to_station_id))",
+        foreign_keys="[Edge.line_id, Edge.to_station_order, Edge.to_station_id]",
+        overlaps="edges,outgoing_edges"
     )
     origin_trips: Mapped[list["Trip"]] = relationship(
+        "Trip",
         back_populates="origin_station_line",
-        primaryjoin=lambda: and_(
-            StationLine.station_id == foreign(Trip.origin_station_id),
-            StationLine.line_id == foreign(Trip.line_id),
-        ),
-        foreign_keys=lambda: [Trip.origin_station_id, Trip.line_id],
+        primaryjoin="and_(StationLine.station_id == foreign(Trip.origin_station_id), StationLine.line_id == foreign(Trip.line_id))",
+        foreign_keys="[Trip.origin_station_id, Trip.line_id]"
     )
     destination_trips: Mapped[list["Trip"]] = relationship(
+        "Trip",
         back_populates="destination_station_line",
-        primaryjoin=lambda: and_(
-            StationLine.station_id == foreign(Trip.destination_station_id),
-            StationLine.line_id == foreign(Trip.line_id),
-        ),
-        foreign_keys=lambda: [Trip.destination_station_id, Trip.line_id],
+        primaryjoin="and_(StationLine.station_id == foreign(Trip.destination_station_id), StationLine.line_id == foreign(Trip.line_id))",
+        foreign_keys="[Trip.destination_station_id, Trip.line_id]"
     )
 
 

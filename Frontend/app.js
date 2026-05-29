@@ -1,7 +1,7 @@
 // ==========================================
 // 1. CẤU HÌNH BIẾN TOÀN CỤC & MAP
 // ==========================================
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
 const map = L.map('map').setView([35.0116, 135.7681], 12);
 let startMarker, endMarker;
 let routeLayerGroup = L.featureGroup().addTo(map);
@@ -104,7 +104,7 @@ function showToast(message, type = 'error') {
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    
+
     toast.innerHTML = `<span></span> <span>${message}</span>`;
     container.appendChild(toast);
 
@@ -143,7 +143,7 @@ async function initDashboard() {
 async function refreshSystemStatus() {
     const list = document.getElementById('statusList');
     if (!list) return;
-    
+
     try {
         const [stationEvents, lineEvents] = await Promise.all([
             fetch(`${API_BASE_URL}/station-status-events`).then(r => r.ok ? r.json() : []),
@@ -174,12 +174,12 @@ map.on('click', (e) => {
     const latlng = e.latlng;
     if (isSelectingStart) {
         if (startMarker) map.removeLayer(startMarker);
-        startMarker = L.marker(latlng, {draggable: true}).addTo(map).bindPopup("<b>A</b> - Điểm bắt đầu").openPopup();
-        
+        startMarker = L.marker(latlng, { draggable: true }).addTo(map).bindPopup("<b>A</b> - Điểm bắt đầu").openPopup();
+
         const startInput = document.getElementById('start-input');
         if (startInput) startInput.value = `Lat: ${latlng.lat.toFixed(4)}, Lng: ${latlng.lng.toFixed(4)}`;
-        
-        startMarker.on('dragend', function() {
+
+        startMarker.on('dragend', function () {
             const pos = startMarker.getLatLng();
             if (startInput) startInput.value = `Lat: ${pos.lat.toFixed(4)}, Lng: ${pos.lng.toFixed(4)}`;
         });
@@ -187,12 +187,12 @@ map.on('click', (e) => {
         isSelectingStart = false;
     } else {
         if (endMarker) map.removeLayer(endMarker);
-        endMarker = L.marker(latlng, {draggable: true}).addTo(map).bindPopup("<b>B</b> - Đích đến").openPopup();
-        
+        endMarker = L.marker(latlng, { draggable: true }).addTo(map).bindPopup("<b>B</b> - Đích đến").openPopup();
+
         const endInput = document.getElementById('end-input');
         if (endInput) endInput.value = `Lat: ${latlng.lat.toFixed(4)}, Lng: ${latlng.lng.toFixed(4)}`;
-        
-        endMarker.on('dragend', function() {
+
+        endMarker.on('dragend', function () {
             const pos = endMarker.getLatLng();
             if (endInput) endInput.value = `Lat: ${pos.lat.toFixed(4)}, Lng: ${pos.lng.toFixed(4)}`;
         });
@@ -211,18 +211,18 @@ if (clearBtn) {
             searchMarker = null;
         }
         routeLayerGroup.clearLayers();
-        
+
         const startInput = document.getElementById('start-input');
         const endInput = document.getElementById('end-input');
         const searchInput = document.getElementById('searchInput');
         if (startInput) startInput.value = "";
         if (endInput) endInput.value = "";
         if (searchInput) searchInput.value = "";
-        
+
         document.getElementById('stat-time').innerText = "-- ms";
         document.getElementById('stat-length').innerText = "-- m";
         document.getElementById('perf-section').style.display = 'none';
-        
+
         isSelectingStart = true;
         showToast("Đã xóa các điểm đã chọn.", "success");
     });
@@ -254,7 +254,7 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/find-path`, {
+        const response = await fetch(`${API_BASE_URL}/route/find-path`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -282,10 +282,10 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
             result.segments.forEach(segment => {
                 let isTrainRoute = ['subway', 'metro', 'rail', 'light_rail'].includes(segment.mode);
                 let polylineStyle;
-                
+
                 if (isTrainRoute) {
-                    let strokeColor = '#fb923c'; 
-                    
+                    let strokeColor = '#fb923c';
+
                     if (segment.mode === 'subway') {
                         const segmentStr = JSON.stringify(segment).toLowerCase();
                         if (segmentStr.includes('karasuma')) {
@@ -307,7 +307,7 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
                 if (segment.stations && segment.stations.length > 0) {
                     segment.stations.forEach(station => {
                         let markerColor = "#1e293b";
-                        
+
                         if (segment.mode === 'subway') {
                             const stationStr = JSON.stringify(station).toLowerCase();
                             const segmentStr = JSON.stringify(segment).toLowerCase();
@@ -333,7 +333,7 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
                             opacity: 1,
                             fillOpacity: 1
                         }).bindPopup(`<b> Ga: ${stationNameEN}</b><br><span style="font-size:11px;color:#666;">Mode: ${segment.mode.toUpperCase()}</span>`)
-                          .addTo(routeLayerGroup);
+                            .addTo(routeLayerGroup);
                     });
                 }
             });
@@ -348,7 +348,7 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
 
         document.getElementById('stat-time').innerText = timeVal;
         document.getElementById('stat-length').innerText = distVal;
-        
+
         if (result.message) {
             showToast(result.message, "success");
         } else {
@@ -378,7 +378,7 @@ if (searchBtn) {
             showToast("Vui lòng nhập địa chỉ cần tìm!", "warning");
             return;
         }
-        
+
         searchBtn.innerText = "...";
         searchBtn.disabled = true;
 
@@ -386,17 +386,17 @@ if (searchBtn) {
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&viewbox=135.5,35.2,136.0,34.8&bounded=0`;
             const res = await fetch(url);
             const data = await res.json();
-            
+
             if (data && data.length > 0) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
-                
+
                 map.setView([lat, lon], 15);
-                
+
                 if (searchMarker) map.removeLayer(searchMarker);
                 searchMarker = L.marker([lat, lon]).addTo(map)
                     .bindPopup(`<b>Kết quả:</b> ${data[0].display_name}`).openPopup();
-                    
+
                 showToast("Đã tìm thấy địa điểm!", "success");
             } else {
                 showToast("Không tìm thấy địa điểm này.", "error");
