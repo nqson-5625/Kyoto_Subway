@@ -261,92 +261,102 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
         });
 
         if (!response.ok) {
-            const errBody = await response.json();
-            throw new Error(errBody.message || "Lỗi xử lý đường đi từ Hệ thống.");
+            throw new Error("Lỗi kết nối đến máy chủ định tuyến.");
         }
 
         const result = await response.json();
+        console.log("Dữ liệu đường đi từ Backend:", result); // Debug xem console
 
-        if (!result || (!result.path && !result.segments)) {
-            showToast("Không tìm thấy đường đi thích hợp hoặc mạng lưới bị cô lập!", "error");
+        // Kiểm tra xem backend có mảng segments và có dữ liệu không
+        if (!result || !result.segments || result.segments.length === 0) {
+            showToast(result.message || "Không tìm thấy lộ trình phù hợp giữa 2 điểm này!", "error");
             routeLayerGroup.clearLayers();
             document.getElementById('stat-time').innerText = "-- ms";
             document.getElementById('stat-length').innerText = "-- m";
             return;
         }
 
+        // Xóa đường cũ trước khi vẽ đường mới
         routeLayerGroup.clearLayers();
 
-        // 1. VẼ CÁC ĐOẠN ĐƯỜNG ĐI (SEGMENTS) - Đã tối ưu hóa
-        if (result.segments) {
-            result.segments.forEach(segment => {
-                if (segment.coordinates && segment.coordinates.length > 0) {
+        let firstStationPoint = null;
+        let lastStationPoint = null;
 
-                    if (segment.mode === 'walk') {
-                        // Nét đứt cho chặng đi bộ kết nối
-                        L.polyline(segment.coordinates, {
-                            color: '#888888', // Màu xám để phân biệt với đường ray
-                            weight: 4,
-                            dashArray: '8, 8',
-                            opacity: 0.8
-                        }).addTo(routeLayerGroup);
+        // VẼ CÁC ĐOẠN ĐƯỜNG TÀU (SEGMENTS) TỪ BACKEND
+        result.segments.forEach(segment => {
+            if (segment.coordinates && segment.coordinates.length > 0) {
+                const latLngs = segment.coordinates; // Dữ liệu backend đang là [lat, lng]
 
-                    } else if (segment.mode === 'subway' || segment.mode === 'metro' || segment.mode === 'rail' || segment.mode === 'ride') {
-                        // Nét liền cho chặng tàu chạy (giữ lại logic phân màu của bạn)
-                        let strokeColor = '#0078FF'; // Mặc định xanh dương
-                        const segmentStr = JSON.stringify(segment).toLowerCase();
+                // Lưu lại tọa độ ga đầu và ga cuối để lát nối nét đứt
+                if (!firstStationPoint) firstStationPoint = latLngs[0];
+                lastStationPoint = latLngs[latLngs.length - 1];
 
-                        if (segmentStr.includes('karasuma') || segment.line_id === 'Karasuma') {
-                            strokeColor = '#4CAF50'; // Karasuma - Xanh lá
-                        } else if (segmentStr.includes('tozai') || segment.line_id === 'Tozai') {
-                            strokeColor = '#E60012'; // Tozai - Đỏ
-                        }
+                let strokeColor = '#0078FF'; // XANH DƯƠNG (Mặc định cho toàn bộ tuyến để dễ nhìn)
+                let weight = 6;
+                let dashArray = null;
 
-                        L.polyline(segment.coordinates, {
-                            color: strokeColor,
-                            weight: 6,
-                            opacity: 1.0,
-                            lineJoin: 'round' // Giúp các khúc cua mượt hơn
-                        }).addTo(routeLayerGroup);
-
-                    } else if (segment.mode === 'transfer') {
-                        // Nét đứt màu cam cho chặng trung chuyển nội bộ
-                        L.polyline(segment.coordinates, {
-                            color: '#FFA500',
-                            weight: 4,
-                            dashArray: '4, 4',
-                            opacity: 0.9
-                        }).addTo(routeLayerGroup);
-                    }
-
-                    // LƯU Ý QUAN TRỌNG: 
-                    // Đoạn code vẽ L.circleMarker cho nhà ga đã được BỎ ĐI hoàn toàn.
-                    // Leaflet sẽ tự động sử dụng các nút ga màu đỏ có sẵn từ lớp MapData gốc,
-                    // giúp triệt tiêu hoàn toàn lỗi 1 ga bị đè 2 nút (Double stations).
+                if (segment.mode === 'walk') {
+                    strokeColor = '#888888';
+                    weight = 4;
+                    dashArray = '8, 8';
+                } else if (segment.mode === 'transfer') {
+                    strokeColor = '#FFA500'; // Cam
+                    weight = 5;
+                    dashArray = '4, 4';
+                } else {
+                    // Nếu muốn phân màu theo tuyến, bỏ comment đoạn dưới đây:
+                    /*
+                    const lineStr = (segment.line_id || "").toLowerCase();
+                    if (lineStr.includes('karasuma')) strokeColor = '#4CAF50';
+                    else if (lineStr.includes('tozai')) strokeColor = '#E60012';
+                    */
                 }
-            });
+
+                L.polyline(latLngs, {
+                    color: strokeColor,
+                    weight: weight,
+                    dashArray: dashArray,
+                    opacity: 1.0,
+                    lineJoin: 'round'
+                }).addTo(routeLayerGroup);
+            }
+        });
+
+        // TỰ ĐỘNG NỐI NÉT ĐỨT TỪ ĐIỂM A (START) VÀO NHÀ GA ĐẦU TIÊN
+        if (firstStationPoint && startMarker) {
+            L.polyline([startMarker.getLatLng(), firstStationPoint], {
+                color: '#666666',
+                weight: 4,
+                dashArray: '5, 5',
+                opacity: 0.8
+            }).addTo(routeLayerGroup);
         }
 
+        // TỰ ĐỘNG NỐI NÉT ĐỨT TỪ NHÀ GA CUỐI CÙNG RA ĐIỂM B (END)
+        if (lastStationPoint && endMarker) {
+            L.polyline([lastStationPoint, endMarker.getLatLng()], {
+                color: '#666666',
+                weight: 4,
+                dashArray: '5, 5',
+                opacity: 0.8
+            }).addTo(routeLayerGroup);
+        }
+
+        // ZOOM VỪA VẶN BẢN ĐỒ
         if (routeLayerGroup.getLayers().length > 0) {
             map.fitBounds(routeLayerGroup.getBounds(), { padding: [40, 40] });
         }
 
-        const timeVal = result.execution_time !== undefined ? result.execution_time + " ms" : (result.travel_time ? result.travel_time + " phút" : "0 ms");
-        const distVal = result.total_distance !== undefined ? result.total_distance + " m" : (result.distance ? result.distance + " m" : "0 m");
-
+        // HIỂN THỊ THỜI GIAN
+        const timeVal = result.travel_time !== undefined ? result.travel_time + " phút" : "-- phút";
         document.getElementById('stat-time').innerText = timeVal;
-        document.getElementById('stat-length').innerText = distVal;
+        document.getElementById('stat-length').innerText = "Xem trên bản đồ";
 
-        if (result.message) {
-            showToast(result.message, "success");
-        } else {
-            showToast("Đã trích xuất lộ trình tối ưu thành công.", "success");
-        }
+        showToast("Đã vẽ lộ trình xanh dương thành công!", "success");
 
     } catch (err) {
+        console.error(err);
         showToast("Lỗi hệ thống: " + err.message, "error");
-        document.getElementById('stat-time').innerText = "Lỗi";
-        document.getElementById('stat-length').innerText = "Lỗi";
     } finally {
         btn.innerText = "TÌM ĐƯỜNG ĐI TỐI ƯU";
         btn.disabled = false;
