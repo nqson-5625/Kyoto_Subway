@@ -29,5 +29,8 @@ class NextDepartureService:
 
     def get_by_line(self, line_id: str):
         return self.repo.get_by_line(line_id)
+    
+    def get_by_trip(self, trip_id: str):
+        return self.repo.get_by_trip(trip_id)
 
     
