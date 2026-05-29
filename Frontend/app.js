@@ -277,64 +277,52 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
 
         routeLayerGroup.clearLayers();
 
-        // 1. Vẽ các đoạn đường đi (Segments) kết hợp đồng bộ màu sắc 2 Subway
+        // 1. VẼ CÁC ĐOẠN ĐƯỜNG ĐI (SEGMENTS) - Đã tối ưu hóa
         if (result.segments) {
             result.segments.forEach(segment => {
-                let isTrainRoute = ['subway', 'metro', 'rail', 'light_rail'].includes(segment.mode);
-                let polylineStyle;
+                if (segment.coordinates && segment.coordinates.length > 0) {
 
-                if (isTrainRoute) {
-                    let strokeColor = '#fb923c';
+                    if (segment.mode === 'walk') {
+                        // Nét đứt cho chặng đi bộ kết nối
+                        L.polyline(segment.coordinates, {
+                            color: '#888888', // Màu xám để phân biệt với đường ray
+                            weight: 4,
+                            dashArray: '8, 8',
+                            opacity: 0.8
+                        }).addTo(routeLayerGroup);
 
-                    if (segment.mode === 'subway') {
+                    } else if (segment.mode === 'subway' || segment.mode === 'metro' || segment.mode === 'rail' || segment.mode === 'ride') {
+                        // Nét liền cho chặng tàu chạy (giữ lại logic phân màu của bạn)
+                        let strokeColor = '#0078FF'; // Mặc định xanh dương
                         const segmentStr = JSON.stringify(segment).toLowerCase();
-                        if (segmentStr.includes('karasuma')) {
+
+                        if (segmentStr.includes('karasuma') || segment.line_id === 'Karasuma') {
                             strokeColor = '#4CAF50'; // Karasuma - Xanh lá
-                        } else if (segmentStr.includes('tozai')) {
+                        } else if (segmentStr.includes('tozai') || segment.line_id === 'Tozai') {
                             strokeColor = '#E60012'; // Tozai - Đỏ
-                        } else {
-                            strokeColor = '#38bdf8';
                         }
+
+                        L.polyline(segment.coordinates, {
+                            color: strokeColor,
+                            weight: 6,
+                            opacity: 1.0,
+                            lineJoin: 'round' // Giúp các khúc cua mượt hơn
+                        }).addTo(routeLayerGroup);
+
+                    } else if (segment.mode === 'transfer') {
+                        // Nét đứt màu cam cho chặng trung chuyển nội bộ
+                        L.polyline(segment.coordinates, {
+                            color: '#FFA500',
+                            weight: 4,
+                            dashArray: '4, 4',
+                            opacity: 0.9
+                        }).addTo(routeLayerGroup);
                     }
-                    polylineStyle = { color: strokeColor, weight: 6, opacity: 0.9 };
-                } else {
-                    polylineStyle = { color: '#2ecc71', weight: 4, dashArray: '8, 8', opacity: 0.8 };
-                }
 
-                L.polyline(segment.coordinates, polylineStyle).addTo(routeLayerGroup);
-
-                // 2. Điểm các nhà ga dọc tuyến khớp màu viền
-                if (segment.stations && segment.stations.length > 0) {
-                    segment.stations.forEach(station => {
-                        let markerColor = "#1e293b";
-
-                        if (segment.mode === 'subway') {
-                            const stationStr = JSON.stringify(station).toLowerCase();
-                            const segmentStr = JSON.stringify(segment).toLowerCase();
-                            if (stationStr.includes('karasuma') || segmentStr.includes('karasuma')) {
-                                markerColor = '#4CAF50';
-                            } else if (stationStr.includes('tozai') || segmentStr.includes('tozai')) {
-                                markerColor = '#E60012';
-                            } else {
-                                markerColor = '#38bdf8';
-                            }
-                        } else if (!isTrainRoute) {
-                            markerColor = "#2ecc71";
-                        }
-
-                        // Ưu tiên lấy tiếng Anh
-                        let stationNameEN = station.name_en || station['name:en'] || station.name || 'Unknown Station';
-
-                        L.circleMarker([station.lat, station.lng], {
-                            radius: 5,
-                            fillColor: "#fff",
-                            color: markerColor,
-                            weight: 2,
-                            opacity: 1,
-                            fillOpacity: 1
-                        }).bindPopup(`<b> Ga: ${stationNameEN}</b><br><span style="font-size:11px;color:#666;">Mode: ${segment.mode.toUpperCase()}</span>`)
-                            .addTo(routeLayerGroup);
-                    });
+                    // LƯU Ý QUAN TRỌNG: 
+                    // Đoạn code vẽ L.circleMarker cho nhà ga đã được BỎ ĐI hoàn toàn.
+                    // Leaflet sẽ tự động sử dụng các nút ga màu đỏ có sẵn từ lớp MapData gốc,
+                    // giúp triệt tiêu hoàn toàn lỗi 1 ga bị đè 2 nút (Double stations).
                 }
             });
         }
