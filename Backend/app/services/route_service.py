@@ -152,6 +152,11 @@ class RouteService:
             if time_obj:
                 total_time = getattr(time_obj, 'total_minutes', getattr(time_obj, 'total_time_minutes', getattr(time_obj, 'total_cost', 0)))
 
+            # Trong hàm calculate_optimal_route
+            print(f"Số lượng segments được tạo: {len(fe_segments)}")
+            for seg in fe_segments:
+                print(f"Mode: {seg.get('mode')}, Toạ độ: {len(seg.get('coordinates', []))}")
+
             return {
                 "path": True,
                 "travel_time": round(float(total_time), 2),
