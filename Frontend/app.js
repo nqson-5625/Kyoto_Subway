@@ -1,7 +1,7 @@
 // ==========================================
 // 1. CẤU HÌNH BIẾN TOÀN CỤC & MAP
 // ==========================================
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
 const map = L.map('map').setView([35.0116, 135.7681], 12);
 let startMarker, endMarker;
 let routeLayerGroup = L.featureGroup().addTo(map);
@@ -114,61 +114,8 @@ function showToast(message, type = 'error') {
         setTimeout(() => toast.remove(), 500);
     }, 4000);
 }
-
 // ==========================================
-// 3. KHỞI TẠO DASHBOARD & STATUS EVENTS (BACKEND)
-// ==========================================
-async function initDashboard() {
-    const dateInput = document.getElementById('serviceDate');
-    if (dateInput && !dateInput.value) {
-        dateInput.value = new Date().toISOString().split('T')[0];
-    }
-
-    try {
-        const scRes = await fetch(`${API_BASE_URL}/scenarios`);
-        if (scRes.ok) {
-            const scenarios = await scRes.json();
-            const scSelect = document.getElementById('scenarioSelect');
-            if (scSelect) {
-                scSelect.innerHTML = '<option value="">-- Bình thường (Không sự cố) --</option>';
-                scenarios.forEach(s => scSelect.add(new Option(s.name, s.id)));
-            }
-        }
-        await refreshSystemStatus();
-    } catch (err) {
-        showToast("Chưa kết nối được với Backend để tải sự cố.", "warning");
-    }
-}
-
-async function refreshSystemStatus() {
-    const list = document.getElementById('statusList');
-    if (!list) return;
-    
-    try {
-        const [stationEvents, lineEvents] = await Promise.all([
-            fetch(`${API_BASE_URL}/station-status-events`).then(r => r.ok ? r.json() : []),
-            fetch(`${API_BASE_URL}/line-status-events`).then(r => r.ok ? r.json() : [])
-        ]);
-
-        if (stationEvents.length === 0 && lineEvents.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:#28a745; font-size:12px; padding: 5px;">✓ Hệ thống ổn định</div>';
-            return;
-        }
-
-        list.innerHTML = '';
-        stationEvents.forEach(ev => {
-            list.innerHTML += `<div class="event-item"><b>Ga ${ev.station_name}:</b> ${ev.status}</div>`;
-        });
-        lineEvents.forEach(ev => {
-            list.innerHTML += `<div class="event-item line"><b>Tuyến ${ev.line_name}:</b> ${ev.description}</div>`;
-        });
-    } catch (e) {
-        list.innerHTML = '<div style="color:#888; font-size:11px; text-align:center; padding: 5px;">Không thể tải dữ liệu sự cố công cộng.</div>';
-    }
-}
-
-// ==========================================
-// 4. TƯƠNG TÁC CHỌN ĐIỂM TRÊN BẢN ĐỒ
+// 3. TƯƠNG TÁC CHỌN ĐIỂM TRÊN BẢN ĐỒ
 // ==========================================
 map.on('click', (e) => {
     const latlng = e.latlng;
@@ -229,7 +176,7 @@ if (clearBtn) {
 }
 
 // ==========================================
-// 5. THỰC THI THUẬT TOÁN TÌM ĐƯỜNG
+// 4. THỰC THI THUẬT TOÁN TÌM ĐƯỜNG
 // ==========================================
 document.getElementById('findPathBtn').addEventListener('click', async () => {
     if (!startMarker || !endMarker) {
@@ -366,54 +313,71 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// 6. TÌM KIẾM ĐỊA CHỈ
+// 5. TÌM KIẾM ĐỊA CHỈ
 // ==========================================
-let searchMarker;
+// Sự kiện khi bấm nút Tìm vị trí
+    document.getElementById('searchBtn').addEventListener('click', handleSearchAddress);
 
-const searchBtn = document.getElementById('searchBtn');
-if (searchBtn) {
-    searchBtn.addEventListener('click', async () => {
-        const query = document.getElementById('searchInput').value;
-        if (!query) {
-            showToast("Vui lòng nhập địa chỉ cần tìm!", "warning");
-            return;
-        }
-        
-        searchBtn.innerText = "...";
-        searchBtn.disabled = true;
-
-        try {
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&viewbox=135.5,35.2,136.0,34.8&bounded=0`;
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            if (data && data.length > 0) {
-                const lat = parseFloat(data[0].lat);
-                const lon = parseFloat(data[0].lon);
-                
-                map.setView([lat, lon], 15);
-                
-                if (searchMarker) map.removeLayer(searchMarker);
-                searchMarker = L.marker([lat, lon]).addTo(map)
-                    .bindPopup(`<b>Kết quả:</b> ${data[0].display_name}`).openPopup();
-                    
-                showToast("Đã tìm thấy địa điểm!", "success");
-            } else {
-                showToast("Không tìm thấy địa điểm này.", "error");
-            }
-        } catch (err) {
-            showToast("Lỗi kết nối máy chủ tìm kiếm.", "error");
-        } finally {
-            searchBtn.innerText = "Tìm";
-            searchBtn.disabled = false;
-        }
+    // Sự kiện khi nhấn phím Enter ngay trong ô nhập liệu địa chỉ
+    document.getElementById('search-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSearchAddress();
     });
-}
-
-document.getElementById('searchInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        document.getElementById('searchBtn').click();
+    async function handleSearchAddress() {
+    const query = document.getElementById('search-input').value.trim();
+    if (!query) {
+        showToast("Vui lòng nhập tên địa danh hoặc nhà ga cần tìm kiếm!", "warning");
+        return;
     }
-});
+
+    const searchBtn = document.getElementById('searchBtn');
+    searchBtn.innerText = "Đang tìm...";
+    searchBtn.disabled = true;
+
+    // Định vị địa chỉ và giới hạn tìm kiếm tập trung tại khu vực Kyoto, Nhật Bản
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}+Kyoto&limit=1`;
+
+    try {
+        const response = await fetch(url);
+        const results = await response.json();
+
+        if (results && results.length > 0) {
+            const topResult = results[0];
+            const lat = parseFloat(topResult.lat);
+            const lon = parseFloat(topResult.lon);
+            const targetLatLng = L.latLng(lat, lon);
+
+            // Phóng tầm mắt bản đồ đến vị trí vừa tìm thấy
+            map.setView(targetLatLng, 15);
+
+            // Tự động gán Marker và điền tọa độ vào ô dữ liệu đầu vào (Điểm đi hoặc Điểm đến)
+            if (isSelectingStart) {
+                if (startMarker) map.removeLayer(startMarker);
+                
+                startMarker = L.marker(targetLatLng).addTo(map)
+                    .bindPopup(`<b>Điểm xuất phát (A)</b><br>${topResult.display_name.split(',')[0]}`).openPopup();
+                    
+                document.getElementById('start-input').value = `Vĩ độ: ${lat.toFixed(4)}, Kinh độ: ${lon.toFixed(4)}`;
+                isSelectingStart = false; // Chuyển lượt chọn tiếp theo sang điểm đích
+                showToast("Đã tự động điền Điểm xuất phát từ kết quả tìm kiếm!", "info");
+            } else {
+                if (endMarker) map.removeLayer(endMarker);
+                
+                endMarker = L.marker(targetLatLng).addTo(map)
+                    .bindPopup(`<b>Đích đến (B)</b><br>${topResult.display_name.split(',')[0]}`).openPopup();
+                    
+                document.getElementById('end-input').value = `Vĩ độ: ${lat.toFixed(4)}, Kinh độ: ${lon.toFixed(4)}`;
+                isSelectingStart = true; // Quay vòng lại lượt chọn điểm đầu
+                showToast("Đã tự động điền Đích đến từ kết quả tìm kiếm!", "success");
+            }
+        } else {
+            showToast("Không tìm thấy địa danh nào phù hợp tại khu vực Kyoto.", "error");
+        }
+    } catch (err) {
+        showToast("Lỗi kết nối máy chủ tìm kiếm: " + err.message, "error");
+    } finally {
+        searchBtn.innerText = "Tìm vị trí";
+        searchBtn.disabled = false;
+    }
+}
 
 initDashboard();

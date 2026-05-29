@@ -256,14 +256,11 @@
             <input type="text" id="end-input" placeholder="Click bản đồ chọn đích đến..." readonly>
             <button class="btn btn-warning" id="clearBtn">✖ Hủy các điểm đã chọn</button>
         </div>
-
         <div class="control-group">
-            <label>2. Sự cố </label>
-            <input type="date" id="serviceDate">
-            <select id="scenarioSelect">
-                <option value="">-- Đang tải... --</option>
-            </select>
-        </div>
+    <label>Tìm kiếm địa chỉ nhanh</label>
+    <input type="text" id="search-input" placeholder="Nhập tên địa danh, nhà ga (Ví dụ: Kyoto Station)...">
+    <button class="btn" id="searchBtn" style="background: #16a085; color: white;">Tìm vị trí</button>
+</div>
 
         <div class="control-group">
             <label>3. Thuật toán tìm kiếm</label>
@@ -283,23 +280,12 @@
                 <div class="perf-item">Tổng chiều dài lộ trình: <span class="perf-value" id="stat-length">-- m</span></div>
             </div>
         </div>
-        
         <div class="control-group">
-            <label>Tìm kiếm địa điểm / Ga tàu</label>
-            <div style="display: flex; gap: 5px; margin-bottom: 8px;">
-                <input type="text" id="searchInput" placeholder="Nhập tên đường, ga, địa điểm..." style="margin-bottom: 0;">
-                <button class="btn btn-primary" id="searchBtn" style="margin-top: 0; width: 60px; padding: 10px;">Tìm</button>
-            </div>
-            <button id="toggleSubwayBtn" class="btn" style="background: #34495e; color: white; border: 1px solid var(--accent);">Hiện hệ thống tàu</button>
-        </div>
-
-        <div class="control-group">
-            <label>Nhật ký sự cố thời gian thực</label>
-            <div id="statusList">
-                <div style="text-align:center; color:#888; font-size:11px; padding: 5px;">Đang đồng bộ trạng thái...</div>
-            </div>
-        </div>
+    <label>* Hệ thống tàu</label>
+    <button id="toggleSubwayBtn" class="btn" style="background: #34495e; color: white; border: 1px solid var(--accent); margin-top: 0; margin-bottom: 8px;">Hiện hệ thống tàu</button>
+</div>
     </div>
+    
 
     <div id="map">
         <div class="top-nav-links">
