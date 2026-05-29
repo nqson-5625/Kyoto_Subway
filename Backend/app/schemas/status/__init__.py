@@ -1,5 +1,5 @@
-from Backend.app.schemas.status.scenario import ScenarioResponse
-from Backend.app.schemas.status.line_status_event import LineStatusEventCreate, LineStatusEventResponse, LineStatusEventUpdate
-from Backend.app.schemas.status.station_status_event import StationStatusEventCreate, StationStatusEventResponse, StationStatusEventUpdate
-from Backend.app.schemas.status.edge_status_event import EdgeStatusEventCreate, EdgeStatusEventResponse, EdgeStatusEventUpdate
-from Backend.app.schemas.status.trip_status_event import TripStatusEventCreate, TripStatusEventResponse, TripStatusEventUpdate
+from app.schemas.status.scenario import ScenarioResponse
+from app.schemas.status.line_status_event import LineStatusEventCreate, LineStatusEventResponse, LineStatusEventUpdate
+from app.schemas.status.station_status_event import StationStatusEventCreate, StationStatusEventResponse, StationStatusEventUpdate
+from app.schemas.status.edge_status_event import EdgeStatusEventCreate, EdgeStatusEventResponse, EdgeStatusEventUpdate
+from app.schemas.status.trip_status_event import TripStatusEventCreate, TripStatusEventResponse, TripStatusEventUpdate

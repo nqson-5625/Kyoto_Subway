@@ -72,3 +72,11 @@ class NextDepartureRepository:
         self.db.commit()
 
         return item
+    
+    def get_by_trip(self, trip_id: str):
+        return (
+            self.db.query(NextDeparture)
+            .filter(NextDeparture.trip_id == trip_id)
+            .order_by(NextDeparture.stop_sequence.asc())
+            .all()
+        )

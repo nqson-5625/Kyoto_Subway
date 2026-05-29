@@ -28,6 +28,7 @@ class StepInstruction(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+
 # Schema ETA theo từng ga/stop Route PostProcessing trả chi tiết
 class ETAStopItem(BaseModel):
     station_id: str # Mã ga
@@ -42,7 +43,6 @@ class ETAStopItem(BaseModel):
     delay_minutes: float | None = None # Delay tính bằng phút 
 
     model_config = ConfigDict(from_attributes=True)
-
 
 # Schema phục vụ evaluation/scoring route 
 # Hữu ích nếu có nhiều candidate route và muốn explain score
@@ -99,3 +99,5 @@ class RoutePostprocessingOutput(BaseModel):
     warnings: list[RouteWarning] = [] # Warning mức toàn response
 
     model_config = ConfigDict(from_attributes=True)
+
+
