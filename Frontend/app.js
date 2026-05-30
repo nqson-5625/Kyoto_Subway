@@ -265,10 +265,14 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
         }
 
         const result = await response.json();
-        console.log("Dữ liệu đường đi từ Backend:", result); // Debug xem console
 
-        // Kiểm tra xem backend có mảng segments và có dữ liệu không
-        if (!result || !result.segments || result.segments.length === 0) {
+        // Hỗ trợ cả 2 định dạng trả về (RoutePostprocessingOutput hoặc CoreRoutingOutput)
+        let routes = result.routes || [];
+        if (routes.length === 0 && result.segments) {
+            routes = [{ segments: result.segments, cost_breakdown: { time_cost: result.travel_time } }];
+        }
+
+        if (!routes || routes.length === 0 || !routes[0].segments || routes[0].segments.length === 0) {
             showToast(result.message || "Không tìm thấy lộ trình phù hợp giữa 2 điểm này!", "error");
             routeLayerGroup.clearLayers();
             document.getElementById('stat-time').innerText = "-- ms";
@@ -276,40 +280,34 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
             return;
         }
 
-        // Xóa đường cũ trước khi vẽ đường mới
         routeLayerGroup.clearLayers();
+        const mainRoute = routes[0];
+        let totalTravelTime = mainRoute.cost_breakdown?.time_cost || 0;
 
-        let firstStationPoint = null;
-        let lastStationPoint = null;
+        // VẼ CÁC ĐOẠN ĐƯỜNG
+        mainRoute.segments.forEach(segment => {
+            let latLngs = [];
 
-        // VẼ CÁC ĐOẠN ĐƯỜNG TÀU (SEGMENTS) TỪ BACKEND
-        result.segments.forEach(segment => {
-            if (segment.coordinates && segment.coordinates.length > 0) {
-                const latLngs = segment.coordinates; // Dữ liệu backend đang là [lat, lng]
+            // Giải mã toạ độ thực tế từ thuộc tính polyline
+            if (segment.polyline && segment.polyline.points) {
+                latLngs = JSON.parse(segment.polyline.points);
+            } else if (segment.coordinates && segment.coordinates.length > 0) {
+                latLngs = segment.coordinates; // Hỗ trợ tương thích ngược
+            }
 
-                // Lưu lại tọa độ ga đầu và ga cuối để lát nối nét đứt
-                if (!firstStationPoint) firstStationPoint = latLngs[0];
-                lastStationPoint = latLngs[latLngs.length - 1];
-
-                let strokeColor = '#0078FF'; // XANH DƯƠNG (Mặc định cho toàn bộ tuyến để dễ nhìn)
+            if (latLngs.length > 0) {
+                let strokeColor = '#0078FF'; // Xanh dương (Tàu)
                 let weight = 6;
                 let dashArray = null;
 
                 if (segment.mode === 'walk') {
-                    strokeColor = '#888888';
-                    weight = 4;
-                    dashArray = '8, 8';
+                    strokeColor = '#888888'; // Xám (Đi bộ thực tế)
+                    weight = 5;
+                    dashArray = '6, 6';
                 } else if (segment.mode === 'transfer') {
-                    strokeColor = '#FFA500'; // Cam
+                    strokeColor = '#FFA500'; // Cam (Chuyển tuyến)
                     weight = 5;
                     dashArray = '4, 4';
-                } else {
-                    // Nếu muốn phân màu theo tuyến, bỏ comment đoạn dưới đây:
-                    /*
-                    const lineStr = (segment.line_id || "").toLowerCase();
-                    if (lineStr.includes('karasuma')) strokeColor = '#4CAF50';
-                    else if (lineStr.includes('tozai')) strokeColor = '#E60012';
-                    */
                 }
 
                 L.polyline(latLngs, {
@@ -322,37 +320,16 @@ document.getElementById('findPathBtn').addEventListener('click', async () => {
             }
         });
 
-        // TỰ ĐỘNG NỐI NÉT ĐỨT TỪ ĐIỂM A (START) VÀO NHÀ GA ĐẦU TIÊN
-        if (firstStationPoint && startMarker) {
-            L.polyline([startMarker.getLatLng(), firstStationPoint], {
-                color: '#666666',
-                weight: 4,
-                dashArray: '5, 5',
-                opacity: 0.8
-            }).addTo(routeLayerGroup);
-        }
-
-        // TỰ ĐỘNG NỐI NÉT ĐỨT TỪ NHÀ GA CUỐI CÙNG RA ĐIỂM B (END)
-        if (lastStationPoint && endMarker) {
-            L.polyline([lastStationPoint, endMarker.getLatLng()], {
-                color: '#666666',
-                weight: 4,
-                dashArray: '5, 5',
-                opacity: 0.8
-            }).addTo(routeLayerGroup);
-        }
-
         // ZOOM VỪA VẶN BẢN ĐỒ
         if (routeLayerGroup.getLayers().length > 0) {
             map.fitBounds(routeLayerGroup.getBounds(), { padding: [40, 40] });
         }
 
         // HIỂN THỊ THỜI GIAN
-        const timeVal = result.travel_time !== undefined ? result.travel_time + " phút" : "-- phút";
-        document.getElementById('stat-time').innerText = timeVal;
-        document.getElementById('stat-length').innerText = "Xem trên bản đồ";
+        document.getElementById('stat-time').innerText = totalTravelTime > 0 ? `${totalTravelTime.toFixed(1)} phút` : "-- phút";
+        document.getElementById('stat-length').innerText = "Đường đi thực tế";
 
-        showToast("Đã vẽ lộ trình xanh dương thành công!", "success");
+        showToast("Đã tính toán lộ trình thành công!", "success");
 
     } catch (err) {
         console.error(err);
