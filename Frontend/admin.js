@@ -179,119 +179,89 @@ async function fetchTargets(type) {
 
     switch (type) {
         case 'station':
-            targetSelect.innerHTML = '<option value="">-- Chọn ga tàu điện ngầm --</option>';
-            if (hasMapData) {
-                const addedStationIds = new Set();
-                kyotoGeoData.features.forEach(f => {
-                    if (!f.properties) return;
-                    const isStation = f.properties.railway === 'station' || f.properties.public_transport === 'station';
-                    if (!isStation) return;
+            targetSelect.innerHTML = '<option value="">-- Đang tải dữ liệu từ Database... --</option>';
+            try {
+                // Gọi thẳng API của Backend để lấy danh sách Ga có sẵn trong DB
+                const response = await fetch(`${API_BASE_URL}/stations`);
+                if (!response.ok) throw new Error("Không thể tải ga");
 
-                    const propStr = JSON.stringify(f.properties).toLowerCase();
-                    if (!propStr.includes('karasuma') && !propStr.includes('tozai') && !propStr.includes('subway') && !propStr.includes('烏丸') && !propStr.includes('東西')) return;
-
-                    const id = f.properties['@id'] || f.id;
-                    if (addedStationIds.has(id)) return;
-
-                    const displayName = f.properties['name:en'] || f.properties['name:ja-Latn'] || f.properties.name || `Station ID: ${id}`;
-                    let lineTag = '';
-                    if (propStr.includes('karasuma') || propStr.includes('烏丸')) lineTag = ' [Karasuma Line]';
-                    else if (propStr.includes('tozai') || propStr.includes('東西')) lineTag = ' [Tozai Line]';
-
-                    targetSelect.add(new Option(`${displayName}${lineTag}`, id));
-                    addedStationIds.add(id);
-                });
-            }
-
-            if (targetSelect.options.length <= 1) {
-                console.warn("Kích hoạt Ga tàu dự phòng do dữ liệu bản đồ trống!");
-                fallbackStations.forEach(st => targetSelect.add(new Option(st.name, st.id)));
-            } else {
-                const optionsArr = Array.from(targetSelect.options).slice(1);
-                optionsArr.sort((a, b) => a.text.localeCompare(b.text));
+                const dbStations = await response.json();
                 targetSelect.innerHTML = '<option value="">-- Chọn ga tàu điện ngầm --</option>';
-                optionsArr.forEach(opt => targetSelect.add(opt));
+
+                // Sắp xếp theo ID (K01 -> K15, T01 -> T17)
+                dbStations.sort((a, b) => a.station_id.localeCompare(b.station_id));
+
+                dbStations.forEach(st => {
+                    // st.station_id sẽ là K08, T15... hoàn toàn khớp với Database!
+                    targetSelect.add(new Option(`${st.station_name || st.name || 'Ga'} (ID: ${st.station_id})`, st.station_id));
+                });
+            } catch (err) {
+                console.error("Lỗi tải ga từ DB:", err);
+                targetSelect.innerHTML = '<option value="">-- Lỗi kết nối DB --</option>';
             }
             break;
 
         case 'line':
-            targetSelect.innerHTML = '<option value="">-- Chọn tuyến tàu điện ngầm --</option>';
-            if (hasMapData) {
-                const uniqueLines = new Set();
-                kyotoGeoData.features.forEach(f => {
-                    if (f.geometry && (f.geometry.type === 'LineString' || f.geometry.type === 'MultiLineString') && f.properties) {
-                        if (f.properties.railway === 'subway' || f.properties.route === 'subway') {
-                            const lineName = f.properties['name:en'] || f.properties.name || f.properties.ref;
-                            if (lineName) uniqueLines.add(lineName);
-                        }
-                    }
+            targetSelect.innerHTML = '<option value="">-- Đang tải dữ liệu Tuyến... --</option>';
+            try {
+                const response = await fetch(`${API_BASE_URL}/lines`);
+                if (!response.ok) throw new Error("Lỗi API");
+                const dbLines = await response.json();
+
+                targetSelect.innerHTML = '<option value="">-- Chọn tuyến tàu điện ngầm --</option>';
+                dbLines.forEach(ln => {
+                    targetSelect.add(new Option(`${ln.line_name || ln.name} (ID: ${ln.line_id})`, ln.line_id));
                 });
-                uniqueLines.forEach(lineName => {
-                    targetSelect.add(new Option(lineName, lineName.toLowerCase().replace(/\s+/g, '_')));
-                });
-            }
-            if (targetSelect.options.length <= 1) {
-                targetSelect.add(new Option("Karasuma Line (Tuyến Karasuma)", "karasuma_line"));
-                targetSelect.add(new Option("Tozai Line (Tuyến Tozai)", "tozai_line"));
+            } catch (e) {
+                // Fallback đúng mã chuẩn DB (karasuma / tozai) nếu không gọi được API
+                targetSelect.innerHTML = '<option value="">-- Chọn tuyến tàu điện ngầm --</option>';
+                targetSelect.add(new Option("Karasuma Line (Tuyến Karasuma)", "karasuma"));
+                targetSelect.add(new Option("Tozai Line (Tuyến Tozai)", "tozai"));
             }
             break;
 
         case 'trip':
-            targetSelect.innerHTML = '<option value="">-- Chọn chuyến tàu điện ngầm --</option>';
-            const mockTrips = [
-                { id: "trip_k1", name: "Trip K1: Karasuma Morning Express (07:00)" },
-                { id: "trip_k2", name: "Trip K2: Karasuma Local (08:15)" },
-                { id: "trip_k3", name: "Trip K3: Karasuma Night Shift (23:00)" },
-                { id: "trip_t1", name: "Trip T1: Tozai Rush Hour (17:30)" },
-                { id: "trip_t2", name: "Trip T2: Tozai Evening (19:45)" }
-            ];
-            mockTrips.forEach(item => targetSelect.add(new Option(item.name, item.id)));
+            targetSelect.innerHTML = '<option value="">-- Đang tải dữ liệu Chuyến tàu... --</option>';
+            try {
+                // Gọi API chuẩn từ Backend
+                const response = await fetch(`${API_BASE_URL}/trips`);
+                if (!response.ok) throw new Error("Lỗi API trips");
+
+                const dbTrips = await response.json();
+                targetSelect.innerHTML = '<option value="">-- Chọn chuyến tàu điện ngầm --</option>';
+
+                // Sắp xếp chuyến tàu theo ID cho dễ tìm
+                dbTrips.sort((a, b) => a.trip_id.localeCompare(b.trip_id));
+
+                dbTrips.forEach(trip => {
+                    // Tận dụng trường headsign từ TripResponse của bạn (nếu có)
+                    const headsign = trip.headsign ? ` (Hướng: ${trip.headsign})` : '';
+                    targetSelect.add(new Option(`Chuyến ${trip.trip_id} - Tuyến ${trip.line_id}${headsign}`, trip.trip_id));
+                });
+            } catch (err) {
+                console.error("Lỗi tải trips từ DB:", err);
+                targetSelect.innerHTML = '<option value="">-- Lỗi kết nối DB --</option>';
+            }
             break;
 
         case 'edge':
-            targetSelect.innerHTML = '<option value="">-- Chọn đoạn ray điện ngầm --</option>';
-            if (hasMapData) {
-                const stationsList = getSubwayStations();
-                const addedEdgeNames = new Set();
+            targetSelect.innerHTML = '<option value="">-- Đang tải dữ liệu Đoạn đường... --</option>';
+            try {
+                // Gọi API chuẩn từ Backend
+                const response = await fetch(`${API_BASE_URL}/edges`);
+                if (!response.ok) throw new Error("Lỗi API edges");
 
-                kyotoGeoData.features.forEach(f => {
-                    if (f.geometry && (f.geometry.type === 'LineString' || f.geometry.type === 'MultiLineString') && f.properties && f.properties.railway === 'subway') {
-                        let lineName = f.properties['name:en'] || f.properties.name;
-                        if (!lineName) {
-                            const propStr = JSON.stringify(f.properties).toLowerCase();
-                            lineName = propStr.includes('karasuma') || propStr.includes('烏丸') ? "Karasuma Line" : "Tozai Line";
-                        }
-
-                        let coords = f.geometry.coordinates;
-                        if (f.geometry.type === 'MultiLineString') coords = coords[0];
-
-                        if (coords && coords.length >= 2) {
-                            const startPoint = coords[0];
-                            const endPoint = coords[coords.length - 1];
-
-                            const stationA = getNearestStation(startPoint[0], startPoint[1], stationsList);
-                            const stationB = getNearestStation(endPoint[0], endPoint[1], stationsList);
-
-                            let edgeName = (stationA !== stationB) ? `${lineName} (${stationA} ➔ ${stationB})` : `${lineName} (Khu vực ga ${stationA})`;
-                            const id = f.properties['@id'] || f.id || `edge_${Math.random()}`;
-
-                            if (!addedEdgeNames.has(edgeName)) {
-                                targetSelect.add(new Option(edgeName, id));
-                                addedEdgeNames.add(edgeName);
-                            }
-                        }
-                    }
-                });
-            }
-
-            if (targetSelect.options.length <= 1) {
-                console.warn("Kích hoạt Đoạn đường dự phòng do dữ liệu bản đồ trống!");
-                fallbackEdges.forEach(ed => targetSelect.add(new Option(ed.name, ed.id)));
-            } else {
-                const optionsArr = Array.from(targetSelect.options).slice(1);
-                optionsArr.sort((a, b) => a.text.localeCompare(b.text));
+                const dbEdges = await response.json();
                 targetSelect.innerHTML = '<option value="">-- Chọn đoạn ray điện ngầm --</option>';
-                optionsArr.forEach(opt => targetSelect.add(opt));
+
+                dbEdges.forEach(edge => {
+                    // Dữ liệu lấy đúng theo EdgeResponse schema 
+                    const lineName = edge.line_id ? `[Tuyến ${edge.line_id.toUpperCase()}]` : '[Đoạn nối]';
+                    targetSelect.add(new Option(`${lineName} Ga ${edge.from_station_id} ➔ Ga ${edge.to_station_id} (ID: ${edge.edge_id})`, edge.edge_id));
+                });
+            } catch (err) {
+                console.error("Lỗi tải edges từ DB:", err);
+                targetSelect.innerHTML = '<option value="">-- Lỗi kết nối DB --</option>';
             }
             break;
     }
@@ -326,7 +296,7 @@ async function postStatusEvent() {
             body: JSON.stringify({
                 [`${type}_id`]: targetId,
                 status: status,
-                timestamp: new Date().toISOString()
+                effective_from: new Date().toISOString()
             })
         });
 

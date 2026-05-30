@@ -1,5 +1,4 @@
-from app.db.models.network import Trip, Timetable
-
+from app.db.models.schedule import Trip, Timetable
 
 class TripRepository:
 
