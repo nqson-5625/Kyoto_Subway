@@ -76,5 +76,34 @@ class WalkingService:
         walk_seconds = int(min_walking_distance / 1.2) # Vận tốc 1.2m/s
         return best_station_id, walk_seconds, coords
 
+    def get_walking_path(self, lon: float, lat: float, target_station_id: str) -> List[List[float]]:
+        """Tìm đường đi bộ dựa trên mạng lưới đường bộ (OSM) từ toạ độ người dùng đến một ga cụ thể"""
+        if self.G is None:
+            self.load_data()
+
+        # 1. Tìm node mạng đường bộ gần vị trí người dùng nhất
+        user_node = ox.distance.nearest_nodes(self.G, X=lon, Y=lat)
+        
+        # 2. Tìm node tương ứng với ID của ga mục tiêu
+        target_node = None
+        for graph_node_id, station_id in self.station_nodes_map.items():
+            if str(station_id) == str(target_station_id):
+                target_node = graph_node_id
+                break
+                
+        if not target_node:
+            return None # Trả về None để code bên ngoài fallback vẽ đường thẳng
+
+        try:
+            # 3. Tìm đường đi ngắn nhất (Dijkstra) trên lưới OSM
+            path_nodes = nx.shortest_path(self.G, source=user_node, target=target_node, weight='length')
+            coords = []
+            for node in path_nodes:
+                node_data = self.G.nodes[node]
+                coords.append([float(node_data['y']), float(node_data['x'])])
+            return coords
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            return None
+
 # Khởi tạo Singleton
 walking_service = WalkingService()

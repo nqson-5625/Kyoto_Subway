@@ -6,6 +6,7 @@ from datetime import datetime
 from app.algorithms.graph_builder import build_graph_from_db
 from app.algorithms.core_router import process_routing_request
 from app.algorithms.route_postprocessing_output_algorithms import get_final_output
+from app.services.walking_service import walking_service
 from app.schemas.algorithm.core_routing_output import CoreRoutingRequestEcho
 
 class RouteService:
@@ -72,34 +73,53 @@ class RouteService:
                     station_dict[r[0]] = {"lat": r[1], "lng": r[2]}
 
             # 5. Khâu từng phân đoạn đường đi (Segments)
+            
+            # --- TÌM GA ĐẦU TIÊN VÀ GA CUỐI CÙNG ĐỂ NỐI ĐƯỜNG ĐI BỘ ---
+            first_station_id = None
+            last_station_id = None
+            
+            for step in route_steps:
+                f_id = get_station_id(getattr(step, 'from_station', None)) or getattr(step, 'from_station_id', None)
+                t_id = get_station_id(getattr(step, 'to_station', None)) or getattr(step, 'to_station_id', None)
+                
+                if f_id and not first_station_id: 
+                    first_station_id = f_id
+                if t_id: 
+                    last_station_id = t_id
+
+            # --- CHẶNG A: VẼ ĐƯỜNG ĐI BỘ TỪ ĐIỂM XUẤT PHÁT VÀO GA ĐẦU TIÊN ---
+            if first_station_id and first_station_id in station_dict:
+                st = station_dict[first_station_id]
+                
+                # Gọi hàm tìm đường thực tế từ OSM map
+                real_coords = walking_service.get_walking_path(payload.start.lng, payload.start.lat, first_station_id)
+                
+                if real_coords:
+                    # Gắn thêm điểm click chuột và tọa độ ga để nét vẽ mượt mà, không hở
+                    final_coords = [[payload.start.lat, payload.start.lng]] + real_coords + [[st['lat'], st['lng']]]
+                else:
+                    # Dự phòng vẽ đường thẳng nếu OSM không tìm được
+                    final_coords = [[payload.start.lat, payload.start.lng], [st['lat'], st['lng']]]
+
+                fe_segments.append({
+                    "mode": "walk", 
+                    "coordinates": final_coords, 
+                    "stations": []
+                })
+
+            # --- CHẶNG B: ĐI TÀU/TRUNG CHUYỂN (Tuyến ray uốn lượn màu xanh) ---
             for idx, step in enumerate(route_steps):
                 mode_val = getattr(step, 'mode', 'unknown')
                 if hasattr(mode_val, 'value'): mode_val = mode_val.value
                 mode_val = str(mode_val).split('.')[-1].lower()
 
-                # Gọi hàm bóc tách dữ liệu lồng nhau
                 from_id = get_station_id(getattr(step, 'from_station', None)) or getattr(step, 'from_station_id', None)
                 to_id = get_station_id(getattr(step, 'to_station', None)) or getattr(step, 'to_station_id', None)
                 line_id = getattr(step, 'line_id', None)
                 
                 coords = []
 
-                # --- CHẶNG A: ĐI BỘ (Nét đứt) ---
-                if mode_val == "walk":
-                    if idx == 0 and to_id:  # Chặng đầu từ A vào Ga
-                        st_info = station_dict.get(to_id)
-                        if st_info:
-                            coords = [[payload.start.lat, payload.start.lng], [st_info['lat'], st_info['lng']]]
-                    elif idx == len(route_steps) - 1 and from_id: # Chặng cuối từ Ga ra B
-                        st_info = station_dict.get(from_id)
-                        if st_info:
-                            coords = [[st_info['lat'], st_info['lng']], [payload.end.lat, payload.end.lng]]
-                    
-                    if coords:
-                        fe_segments.append({"mode": "walk", "coordinates": coords, "stations": []})
-                
-                # --- CHẶNG B: ĐI TÀU/TRUNG CHUYỂN (Tuyến ray uốn lượn màu xanh) ---
-                elif mode_val in ["ride", "subway", "transfer"]:
+                if mode_val in ["ride", "subway", "transfer"]:
                     if from_id and to_id:
                         if mode_val in ["ride", "subway"]:
                             sql_edge = text("""
@@ -145,6 +165,26 @@ class RouteService:
                                 "coordinates": coords,
                                 "stations": [] 
                             })
+
+            # --- CHẶNG C: VẼ ĐƯỜNG ĐI BỘ TỪ GA CUỐI CÙNG ĐẾN ĐÍCH ĐẾN B ---
+            if last_station_id and last_station_id in station_dict:
+                st = station_dict[last_station_id]
+                
+                # Gọi hàm lấy đường thực tế (từ Đích B đi ngược về Ga cuối)
+                real_coords = walking_service.get_walking_path(payload.end.lng, payload.end.lat, last_station_id)
+                
+                if real_coords:
+                    # Đảo ngược danh sách toạ độ để mũi tên vẽ đúng hướng từ Ga -> Đích B
+                    real_coords.reverse()
+                    final_coords = [[st['lat'], st['lng']]] + real_coords + [[payload.end.lat, payload.end.lng]]
+                else:
+                    final_coords = [[st['lat'], st['lng']], [payload.end.lat, payload.end.lng]]
+
+                fe_segments.append({
+                    "mode": "walk", 
+                    "coordinates": final_coords, 
+                    "stations": []
+                })
 
             # Tính tổng thời gian động cho nhiều kiểu output
             time_obj = getattr(optimal_route, 'time_breakdown', getattr(optimal_route, 'cost_breakdown', None))
