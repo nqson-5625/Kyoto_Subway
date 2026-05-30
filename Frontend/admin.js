@@ -162,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 L.geoJSON(edgeFeatures, { style: { color: "#f1c40f", weight: 6, opacity: 1 } }).addTo(highlightLayer);
             }
         }
-
         if (highlightLayer.getLayers().length > 0) {
             const bounds = highlightLayer.getBounds();
             map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15, duration: 0.5 });
@@ -314,10 +313,10 @@ async function postStatusEvent() {
     msgDiv.style.color = "#3498db";
 
     const postEndpoints = {
-        'station': '/station-status-events',
-        'line': '/line-status-events',
-        'trip': '/trip-status-events',
-        'edge': '/edge-status-events'
+        'station': '/station_status_events',
+        'line': '/line_status_events',
+        'trip': '/trip_status_events',
+        'edge': '/edge_status_events'
     };
 
     try {
@@ -335,10 +334,14 @@ async function postStatusEvent() {
             msgDiv.innerText = " Cập nhật hệ thống thành công!";
             msgDiv.style.color = "#2ecc71";
         } else {
-            throw new Error();
+            const errorData = await response.json();
+            console.error("Backend từ chối:", errorData);
+            msgDiv.innerText = ` Lỗi: Server trả về mã ${response.status}. Xem F12 (Console) để biết chi tiết.`;
+            msgDiv.style.color = "#e74c3c";
         }
     } catch (err) {
-        msgDiv.innerText = " Lỗi: Backend từ chối hoặc chưa thiết lập cấu hình Router này";
+        console.error("Lỗi kết nối:", err);
+        msgDiv.innerText = " Lỗi: Mất kết nối tới Backend. Đảm bảo Uvicorn đang chạy!";
         msgDiv.style.color = "#e74c3c";
     }
 }
