@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:5000/api'; 
+const API_BASE_URL = 'http://127.0.0.1:5000/api/v1'; 
 
 const fallbackStations = [
     { id: "node/karasuma_kyoto", name: "Kyoto Station [Karasuma Line]" },
@@ -110,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!targetId || !hasMapData) return;
 
-        // 1. Tô sáng Nhà Ga (Station)
         if (type === 'station') {
             const feature = kyotoGeoData.features.find(f => (f.properties && f.properties['@id'] || f.id) === targetId);
             if (feature) {
