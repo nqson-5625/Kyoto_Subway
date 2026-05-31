@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản trị Sự cố Giao thông - Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { height: 100vh; width: 100%; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #000; }
+        #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; filter: brightness(0.5) grayscale(0.2); }
+
+        .admin-panel {
+            position: relative; z-index: 10; width: 460px; padding: 35px;
+            background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); color: white;
+        }
+
+        h2 { text-align: center; margin-bottom: 25px; letter-spacing: 1px; font-size: 22px; color: #fff; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+
+        select, input {
+            width: 100%; padding: 12px 15px; background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
+            color: white; font-size: 14px; outline: none; transition: 0.3s;
+        }
+        select:focus, input:focus { border-color: #3498db; background: rgba(0, 0, 0, 0.6); }
+        option { background: #1e272e; color: white; }
+
+        #eventType option[value="station"] { color: #3498db; font-weight: bold; }
+        #eventType option[value="line"] { color: #e67e22; font-weight: bold; }
+        #eventType option[value="trip"] { color: #9b59b6; font-weight: bold; }
+        #eventType option[value="edge"] { color: #1abc9c; font-weight: bold; }
+
+        #eventStatus option[value="normal"] { color: #2ecc71; font-weight: bold; }
+        #eventStatus option[value="warning"] { color: #f1c40f; font-weight: bold; }
+        #eventStatus option[value="incident"] { color: #e74c3c; font-weight: bold; }
+        #eventStatus option[value="maintenance"] { color: #bdc3c7; font-weight: bold; }
+
+        .btn {
+            width: 100%; padding: 15px; border: none; border-radius: 12px;
+            font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.4s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-update {
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5); color: white;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3); margin-bottom: 15px;
+        }
+        .btn-update:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5); }
+        
+        .btn-back {
+            background: rgba(255, 255, 255, 0.05); color: #ccc; text-decoration: none;
+            display: block; text-align: center; border: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 45px;
+        }
+        .btn-back:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+        #status-msg { margin-top: 15px; font-size: 13px; text-align: center; min-height: 20px; }
+    </style>
+</head>
+<body>
+    <div id="map-bg"></div>
+
+    <div class="admin-panel">
+        <h2>Control Center</h2>
+
+        <div class="form-group">
+            <label>Phân loại sự cố (Event Type)</label>
+            <select id="eventType">
+                <option value="station">Station Status Event (Nhà ga)</option>
+                <option value="line">Line Status Event (Tuyến)</option>
+                <option value="trip">Trip Status Event (Chuyến tàu)</option>
+                <option value="edge">Edge Status Event (Đoạn đường)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Đối tượng bị ảnh hưởng (Target ID)</label>
+            <select id="targetList">
+                <option value="">Đang phân tích dữ liệu...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Trạng thái cập nhật</label>
+            <select id="eventStatus">
+                <option value="normal">Hoạt động bình thường</option>
+                <option value="warning">Cảnh báo / Quá tải</option>
+                <option value="incident">Sự cố / Tạm dừng</option>
+                <option value="maintenance">Đang bảo trì</option>
+            </select>
+        </div>
+
+        <button id="submitAdminBtn" class="btn btn-update">Phát hành sự kiện (POST)</button>
+        <a href="map.html" class="btn btn-back">Quay về Bản đồ</a>
+
+        <div id="status-msg"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="Mapdata.js"></script> 
+    <script src="admin.js"></script>
+</body>
+</html>
