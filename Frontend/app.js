@@ -119,6 +119,7 @@ function showToast(message, type = 'error') {
 // 3. KHỞI TẠO DASHBOARD & STATUS EVENTS (BACKEND)
 // ==========================================
 async function initDashboard() {
+    // 1. Giữ nguyên tính năng lấy ngày hiện tại
     const dateInput = document.getElementById('serviceDate');
     if (dateInput && !dateInput.value) {
         dateInput.value = new Date().toISOString().split('T')[0];
@@ -127,13 +128,42 @@ async function initDashboard() {
     try {
         const scRes = await fetch(`${API_BASE_URL}/scenarios`);
         if (scRes.ok) {
-            const scenarios = await scRes.json();
+            let scenarios = await scRes.json();
+
+            // In ra Console để debug nếu vẫn lỗi
+            console.log("Dữ liệu Scenarios từ Backend:", scenarios);
+
+            // Chống lỗi nếu Backend bọc data vào trong { data: [...] }
+            if (!Array.isArray(scenarios)) {
+                if (scenarios.data) scenarios = scenarios.data;
+                else if (scenarios.items) scenarios = scenarios.items;
+                else scenarios = Object.values(scenarios)[0];
+            }
+
             const scSelect = document.getElementById('scenarioSelect');
             if (scSelect) {
-                scSelect.innerHTML = '<option value="">-- Bình thường (Không sự cố) --</option>';
-                scenarios.forEach(s => scSelect.add(new Option(s.name, s.id)));
+                let optionsHTML = '<option value="">-- Bình thường (Không sự cố) --</option>';
+
+                scenarios.forEach((s, index) => {
+                    // Cố gắng lấy tên
+                    let text = s.scenario_name || s.name;
+                    let value = s.scenario_id || s.id;
+
+                    // NẾU KHÔNG CÓ TÊN -> ÉP IN TOÀN BỘ CỤC DỮ LIỆU ĐỂ TÌM LỖI
+                    if (!text) {
+                        text = `Dữ liệu lạ ${index + 1}: ` + JSON.stringify(s);
+                    }
+                    if (!value) {
+                        value = `error_${index}`;
+                    }
+
+                    optionsHTML += `<option value="${value}">${text}</option>`;
+                });
+
+                scSelect.innerHTML = optionsHTML;
             }
         }
+        // 2. Giữ nguyên tính năng cập nhật bảng thông báo sự cố đỏ ở dưới
         await refreshSystemStatus();
     } catch (err) {
         showToast("Chưa kết nối được với Backend để tải sự cố.", "warning");
@@ -156,12 +186,21 @@ async function refreshSystemStatus() {
         }
 
         list.innerHTML = '';
+
+        // Sửa lại theo đúng format của StationStatusEventResponse
         stationEvents.forEach(ev => {
-            list.innerHTML += `<div class="event-item"><b>Ga ${ev.station_name}:</b> ${ev.status}</div>`;
+            const statusText = ev.status.toUpperCase();
+            const reason = ev.reason_text ? ` - ${ev.reason_text}` : '';
+            list.innerHTML += `<div class="event-item"><b>Ga ${ev.station_id}:</b> ${statusText}${reason}</div>`;
         });
+
+        // Sửa lại theo đúng format của LineStatusEventResponse
         lineEvents.forEach(ev => {
-            list.innerHTML += `<div class="event-item line"><b>Tuyến ${ev.line_name}:</b> ${ev.description}</div>`;
+            const statusText = ev.status.toUpperCase();
+            const reason = ev.reason_text ? ` - ${ev.reason_text}` : '';
+            list.innerHTML += `<div class="event-item line"><b>Tuyến ${ev.line_id}:</b> ${statusText}${reason}</div>`;
         });
+
     } catch (e) {
         list.innerHTML = '<div style="color:#888; font-size:11px; text-align:center; padding: 5px;">Không thể tải dữ liệu sự cố công cộng.</div>';
     }

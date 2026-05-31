@@ -137,7 +137,7 @@ async def process_routing_request(
             path, time_cost = time_dependent_dijkstra(graph, start_station_id, end_station_id, actual_start_time)
             
     if path is None:
-        return CoreRoutingOutput(status="fail", request=request, routes=[])
+        return CoreRoutingOutput(status="no_route", request=request, routes=[])
         
     station_coords = get_all_station_coords(db)
     edge_geometries = get_all_edge_geometries(db) 
@@ -145,7 +145,7 @@ async def process_routing_request(
     route_obj = _build_route_object(path, origin_walk_sec, dest_walk_sec, start_station_id, end_station_id, origin_coords, dest_coords, station_coords, edge_geometries)
     
     if not route_obj:
-        return CoreRoutingOutput(status="fail", request=request, routes=[])
+        return CoreRoutingOutput(status="no_route", request=request, routes=[])
         
     return CoreRoutingOutput(
         status="success", request=request, routes=[route_obj],

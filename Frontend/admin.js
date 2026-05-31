@@ -95,9 +95,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const eventStatusSelect = document.getElementById('eventStatus');
+    const delayInputGroup = document.getElementById('delayInputGroup');
     eventStatusSelect.addEventListener('change', function () {
-        const colors = { 'normal': '#2ecc71', 'warning': '#f1c40f', 'incident': '#e74c3c', 'maintenance': '#bdc3c7' };
+        // Cập nhật lại key "delayed" và "suspended" cho khớp DB
+        const colors = {
+            'normal': '#2ecc71',
+            'delayed': '#f1c40f',    // Sửa 'warning' thành 'delayed'
+            'suspended': '#e74c3c',  // Sửa 'incident' thành 'suspended'
+            'maintenance': '#bdc3c7'
+        };
         this.style.color = colors[this.value] || 'white';
+
+        if (this.value === 'delayed') {
+            delayInputGroup.style.display = 'block';
+        } else {
+            delayInputGroup.style.display = 'none';
+        }
     });
     eventStatusSelect.dispatchEvent(new Event('change'));
 
@@ -289,20 +302,41 @@ async function postStatusEvent() {
         'edge': '/edge-status-events'
     };
 
+    // --- BƯỚC 3: TẠO PAYLOAD VÀ XỬ LÝ SỐ PHÚT TRỄ ---
+    const payload = {
+        [`${type}_id`]: targetId,
+        status: status,
+        effective_from: new Date().toISOString()
+    };
+
+    // Nếu trạng thái là delayed, bắt buộc lấy số phút từ ô input
+    if (status === 'delayed') {
+        const delayMinInput = document.getElementById('delayMinInput');
+        const delayMin = parseInt(delayMinInput.value);
+
+        if (isNaN(delayMin) || delayMin <= 0) {
+            msgDiv.innerText = " Lỗi: Vui lòng nhập số phút chậm trễ hợp lệ!";
+            msgDiv.style.color = "#e74c3c";
+            delayMinInput.focus(); // Tự động trỏ chuột vào ô nhập
+            return; // Dừng lại, không gửi API
+        }
+        payload.delay_min = delayMin;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}${postEndpoints[type]}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                [`${type}_id`]: targetId,
-                status: status,
-                effective_from: new Date().toISOString()
-            })
+            body: JSON.stringify(payload) // <-- Truyền payload đã gộp vào đây
         });
 
         if (response.ok || response.status === 201) {
             msgDiv.innerText = " Cập nhật hệ thống thành công!";
             msgDiv.style.color = "#2ecc71";
+            // Xóa rỗng ô nhập sau khi gửi thành công
+            if (document.getElementById('delayMinInput')) {
+                document.getElementById('delayMinInput').value = '';
+            }
         } else {
             throw new Error();
         }

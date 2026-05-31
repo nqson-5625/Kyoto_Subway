@@ -49,22 +49,10 @@ def get_event_types():
 @router.get("/status-options")
 def get_status_options():
     return [
-        {
-            "value": "normal",
-            "label": "Hoạt động bình thường"
-        },
-        {
-            "value": "warning",
-            "label": "Cảnh báo / Quá tải"
-        },
-        {
-            "value": "suspended",
-            "label": "Sự cố / Tạm dừng"
-        },
-        {
-            "value": "maintenance",
-            "label": "Đang bảo trì"
-        }
+        {"value": "normal", "label": "Hoạt động bình thường"},
+        {"value": "delayed", "label": "Cảnh báo / Quá tải / Chậm trễ"},
+        {"value": "suspended", "label": "Sự cố / Tạm dừng"},
+        {"value": "maintenance", "label": "Đang bảo trì"}
     ]
 
 
