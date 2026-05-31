@@ -2,6 +2,7 @@ from app.api.v1 import stations, routes, health,line_status_events,station_statu
 from fastapi import APIRouter
 from app.api.v1 import trips
 from app.api.v1 import edges
+from app.api.v1 import scenarios
 api_router = APIRouter()
 
 api_router.include_router(health.router)
@@ -15,3 +16,4 @@ api_router.include_router(trips.router)
 api_router.include_router(edges.router)
 api_router.include_router(control_center.router)
 api_router.include_router(lines.router)
+api_router.include_router(scenarios.router)
