@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, Text, text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, Text, text, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -153,6 +153,13 @@ class RoutingEdgesCurrent(Base):
     )
     line: Mapped["Line"] = relationship(back_populates="routing_edges_current")
     scenario: Mapped[Optional["Scenario"]] = relationship(back_populates="routing_edges_current")
+
+    __table_args__ = (
+        CheckConstraint(
+            "status_source IN ('normal', 'edge_event', 'line_current', 'station_current', 'scenario', 'delay_event', 'maintenance', 'manual_override')",
+            name="routing_edges_current_status_source_chk"
+        ),
+    )
 
 
 class StationStatusCurrent(Base):

@@ -122,8 +122,26 @@ async def process_routing_request(
     request: CoreRoutingRequestEcho, graph: TransitGraph, request_time: datetime, db: Session, algorithm: str = "dijkstra"
 ) -> CoreRoutingOutput:
     
-    start_station_id, origin_walk_sec, origin_coords = walking_service.find_nearest_station_path(request.origin[0], request.origin[1])
-    end_station_id, dest_walk_sec, dest_coords = walking_service.find_nearest_station_path(request.destination[0], request.destination[1])
+    # 1. Lấy danh sách các ID ga ĐANG HOẠT ĐỘNG từ đồ thị hiện tại
+    # (Biến graph lúc này đã loại bỏ hoàn toàn các đoạn đường bị suspended)
+    # Lấy danh sách các ga đang hoạt động từ danh sách kề (adj) của đồ thị
+    active_stations = set(graph.adj.keys())
+    for edges in graph.adj.values():
+        for edge in edges:
+            active_stations.add(edge.to_station)
+
+    # 2. Gọi hàm tìm ga với tham số valid_station_ids
+    start_station_id, origin_walk_sec, origin_coords = walking_service.find_nearest_station_path(
+        lon=request.origin[0], 
+        lat=request.origin[1],
+        valid_station_ids=active_stations
+    )
+    
+    end_station_id, dest_walk_sec, dest_coords = walking_service.find_nearest_station_path(
+        lon=request.destination[0], 
+        lat=request.destination[1],
+        valid_station_ids=active_stations
+    )
     dest_coords.reverse()
     
     actual_start_time = request_time + timedelta(seconds=origin_walk_sec)

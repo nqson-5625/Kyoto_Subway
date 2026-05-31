@@ -1,3 +1,5 @@
+import traceback
+from sqlalchemy import text
 from app.db.models.status import LineStatusEvent
 
 
@@ -17,13 +19,23 @@ class LineStatusEventRepository:
         )
 
     def create(self, data: dict):
-        event = LineStatusEvent(**data)
+        try:
+            # 1. Lưu sự kiện vào Database
+            new_event = LineStatusEvent(**data)
+            self.db.add(new_event)
+            self.db.commit()
+            self.db.refresh(new_event)
 
-        self.db.add(event)
-        self.db.commit()
-        self.db.refresh(event)
+            # 2. Tự động kích hoạt Pipeline ETL để tính toán lại đồ thị
+            self.db.execute(text("CALL sp_run_operational_etl(CURRENT_DATE);"))
+            self.db.commit()
 
-        return event
+            return new_event
+        except Exception as e:
+            self.db.rollback()
+            print("=== LỖI KHI LƯU EVENT HOẶC CHẠY ETL ===")
+            traceback.print_exc()
+            raise e
 
     def update(self, event_id: int, data: dict):
         event = self.get_by_id(event_id)

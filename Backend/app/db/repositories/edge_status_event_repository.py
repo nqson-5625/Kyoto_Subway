@@ -1,5 +1,7 @@
-from app.db.models.status import EdgeStatusEvent
+import traceback
 
+from app.db.models.status import EdgeStatusEvent
+from sqlalchemy import text
 
 class EdgeStatusEventRepository:
 
@@ -17,13 +19,23 @@ class EdgeStatusEventRepository:
         )
 
     def create(self, data: dict):
-        event = EdgeStatusEvent(**data)
+        try:
+            event = EdgeStatusEvent(**data)
 
-        self.db.add(event)
-        self.db.commit()
-        self.db.refresh(event)
+            self.db.add(event)
+            self.db.commit()
+            self.db.refresh(event)
 
-        return event
+            self.db.execute(text("CALL sp_run_operational_etl(CURRENT_DATE);"))
+            self.db.commit()
+
+            return event
+        except Exception as e:
+            self.db.rollback()
+            print("=== LỖI KHI LƯU EVENT HOẶC CHẠY ETL ===")
+            traceback.print_exc()
+            raise e
+        
 
     def update(self, event_id: int, data: dict):
         event = self.get_by_id(event_id)

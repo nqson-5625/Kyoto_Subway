@@ -547,7 +547,7 @@ CREATE TABLE IF NOT EXISTS routing_edges_current (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), -- Thời điểm tạo bản ghi
 
     CONSTRAINT routing_edges_current_distinct_stations_chk CHECK (from_station_id <> to_station_id), -- Ga đầu và ga cuối của cạnh current phải khác nhau
-    CONSTRAINT routing_edges_current_status_source_chk CHECK (status_source IN ('normal', 'delay_event', 'maintenance', 'manual_override', 'scenario')), -- Chuẩn hóa nguồn sinh trạng thái current của cạnh
+    CONSTRAINT routing_edges_current_status_source_chk CHECK (status_source IN ('normal', 'edge_event', 'line_current', 'station_current', 'scenario', 'delay_event', 'maintenance', 'manual_override')), -- Chuẩn hóa nguồn sinh trạng thái current của cạnh
     CONSTRAINT routing_edges_current_time_nonnegative_chk CHECK (base_travel_time_min > 0 AND adjusted_travel_time_min >= 0) -- Thời gian đi phải hợp lệ
 );
 
